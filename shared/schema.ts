@@ -43,6 +43,7 @@ export const paymentGateways = pgTable("payment_gateways", {
   apiUrl: text("api_url").notNull(),
   publicKey: text("public_key").notNull(),
   token: text("token").notNull(),
+  email: text("email"), // Gateway associated email
   isActive: boolean("is_active").default(true).notNull(),
   createdBy: integer("created_by").references(() => users.id),
   entrepreneurId: integer("entrepreneur_id").references(() => users.id).notNull(),
@@ -56,6 +57,7 @@ export const insertPaymentGatewaySchema = createInsertSchema(paymentGateways).pi
   apiUrl: true,
   publicKey: true,
   token: true,
+  email: true,
   isActive: true,
 });
 
@@ -65,6 +67,7 @@ export const updatePaymentGatewaySchema = createInsertSchema(paymentGateways).pi
   apiUrl: true,
   publicKey: true,
   token: true,
+  email: true,
   isActive: true,
 }).partial();
 

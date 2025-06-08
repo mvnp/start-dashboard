@@ -37,6 +37,7 @@ const paymentGatewayFormSchema = z.object({
   apiUrl: z.string().url('Invalid API URL'),
   publicKey: z.string().min(1, 'Public key is required'),
   token: z.string().min(1, 'Token is required'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   isActive: z.boolean().default(true),
 });
 
@@ -61,6 +62,7 @@ export function PaymentGatewayDialog({ open, onClose, gateway }: PaymentGatewayD
       apiUrl: '',
       publicKey: '',
       token: '',
+      email: '',
       isActive: true,
     },
   });
@@ -73,6 +75,7 @@ export function PaymentGatewayDialog({ open, onClose, gateway }: PaymentGatewayD
         apiUrl: gateway.apiUrl,
         publicKey: gateway.publicKey,
         token: gateway.token,
+        email: gateway.email || '',
         isActive: gateway.isActive,
       });
     } else {
@@ -82,6 +85,7 @@ export function PaymentGatewayDialog({ open, onClose, gateway }: PaymentGatewayD
         apiUrl: '',
         publicKey: '',
         token: '',
+        email: '',
         isActive: true,
       });
     }
@@ -209,6 +213,24 @@ export function PaymentGatewayDialog({ open, onClose, gateway }: PaymentGatewayD
                     <Input
                       type="password"
                       placeholder="Enter token"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gateway Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="gateway@example.com"
                       {...field}
                     />
                   </FormControl>
