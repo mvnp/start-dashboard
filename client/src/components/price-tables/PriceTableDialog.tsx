@@ -41,6 +41,7 @@ interface PriceTableDialogProps {
 export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialogProps) {
   const [advantages, setAdvantages] = useState<string[]>([]);
   const { toast } = useToast();
+  const isUpdate = priceTable && priceTable.id > 0;
 
   const form = useForm<PriceTableFormData>({
     resolver: zodResolver(priceTableFormSchema),
@@ -95,8 +96,8 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
         advantages,
       };
 
-      const url = priceTable ? `/api/price-tables/${priceTable.id}` : "/api/price-tables";
-      const method = priceTable ? "PATCH" : "POST";
+      const url = isUpdate ? `/api/price-tables/${priceTable.id}` : "/api/price-tables";
+      const method = isUpdate ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -108,7 +109,7 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
       });
 
       if (!response.ok) {
-        throw new Error(priceTable ? "Failed to update price table" : "Failed to create price table");
+        throw new Error(isUpdate ? "Failed to update price table" : "Failed to create price table");
       }
 
       return response.json();
@@ -117,7 +118,7 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
       queryClient.invalidateQueries({ queryKey: ["/api/price-tables"] });
       toast({
         title: "Success",
-        description: priceTable ? "Price table updated successfully" : "Price table created successfully",
+        description: isUpdate ? "Price table updated successfully" : "Price table created successfully",
       });
       onClose();
     },
