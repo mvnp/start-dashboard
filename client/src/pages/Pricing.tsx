@@ -18,12 +18,11 @@ export default function Pricing() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        <div className="lg:pl-64">
-          <div className="p-6">
+        <div className="flex-1 flex flex-col">
+          <TopBar onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 p-6">
             <div className="animate-pulse space-y-8">
               <div className="text-center">
                 <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg mx-auto mb-4"></div>
@@ -35,20 +34,20 @@ export default function Pricing() {
                 ))}
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <TopBar onMenuClick={() => setSidebarOpen(true)} />
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="lg:pl-64">
-        <div className="p-6">
-          <div className="text-center mb-16">
+      <div className="flex-1 flex flex-col">
+        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="text-center mb-16">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Choose Your Plan
             </h1>
@@ -156,15 +155,16 @@ export default function Pricing() {
             </div>
           )}
 
-          <div className="text-center mt-16">
-            <p className="text-gray-600 dark:text-gray-400">
-              Need a custom solution? 
-              <a href="mailto:sales@company.com" className="text-blue-600 dark:text-blue-400 hover:underline ml-1">
-                Contact our sales team
-              </a>
-            </p>
+            <div className="text-center mt-16">
+              <p className="text-gray-600 dark:text-gray-400">
+                Need a custom solution? 
+                <a href="mailto:sales@company.com" className="text-blue-600 dark:text-blue-400 hover:underline ml-1">
+                  Contact our sales team
+                </a>
+              </p>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
