@@ -5,12 +5,13 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
 import type { UserRole, NavigationItem } from '@/lib/types';
 
 const navigationMenus: Record<UserRole, NavigationItem[]> = {
   'super-admin': [
-    { icon: 'BarChart3', label: 'Dashboard', active: true },
-    { icon: 'Users', label: 'User Management' },
+    { icon: 'BarChart3', label: 'Dashboard', href: '/', active: true },
+    { icon: 'Users', label: 'User Management', href: '/users' },
     { icon: 'Settings', label: 'System Settings' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'Shield', label: 'Security' },
@@ -77,6 +78,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, setUserRole } = useAuth();
   const { theme } = useTheme();
+  const [location] = useLocation();
 
   const menuItems = navigationMenus[user.role];
 
@@ -145,20 +147,47 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Navigation Menu */}
         <nav className="p-4">
           <div className="space-y-1">
-            {menuItems.map((item, index) => (
-              <button
-                key={index}
-                className={cn(
-                  "flex items-center space-x-3 w-full p-3 rounded-lg text-left transition-colors",
-                  item.active
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                )}
-              >
-                {getIcon(item.icon)}
-                <span className="text-sm font-medium">{item.label}</span>
-              </button>
-            ))}
+            {menuItems.map((item, index) => {
+              const isActive = item.href ? location === item.href : item.active;
+              const content = (
+                <>
+                  {getIcon(item.icon)}
+                  <span className="text-sm font-medium">{item.label}</span>
+                </>
+              );
+
+              if (item.href) {
+                return (
+                  <Link
+                    key={index}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center space-x-3 w-full p-3 rounded-lg text-left transition-colors",
+                      isActive
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    )}
+                    onClick={onClose}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={index}
+                  className={cn(
+                    "flex items-center space-x-3 w-full p-3 rounded-lg text-left transition-colors",
+                    isActive
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  )}
+                >
+                  {content}
+                </button>
+              );
+            })}
           </div>
         </nav>
       </div>
