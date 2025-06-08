@@ -1,36 +1,31 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { insertCustomerPlanSchema, type CustomerPlanWithDetails, type User, type PriceTable } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { insertCustomerPlanSchema, updateCustomerPlanSchema, type CustomerPlanWithDetails, type User, type PriceTable } from "@shared/schema";
 
 const customerPlanFormSchema = insertCustomerPlanSchema.extend({
+  customerId: z.number().min(1, "Customer is required"),
+  entrepreneurId: z.number().min(1, "Entrepreneur is required"),
+  priceTableId: z.number().min(1, "Price table is required"),
+  amount: z.string().min(1, "Amount is required"),
+  payStatus: z.enum(['paid', 'pending', 'failed', 'expired']),
   payDate: z.string().optional(),
   payExpiration: z.string().optional(),
   planExpirationDate: z.string().optional(),
+  payHash: z.string().optional(),
+  payLink: z.string().optional(),
+  isActive: z.boolean().default(true),
 });
 
 type CustomerPlanFormData = z.infer<typeof customerPlanFormSchema>;
@@ -42,20 +37,21 @@ interface CustomerPlanDialogProps {
 }
 
 export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlanDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Fetch users for customer and entrepreneur dropdowns
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
     enabled: open,
   });
 
-  // Fetch price tables for plan selection
   const { data: priceTables = [] } = useQuery<PriceTable[]>({
     queryKey: ["/api/price-tables"],
     enabled: open,
   });
+
+  const customers = users.filter(user => user.role === 'customer');
+  const entrepreneurs = users.filter(user => user.role === 'entrepreneur');
 
   const form = useForm<CustomerPlanFormData>({
     resolver: zodResolver(customerPlanFormSchema),
@@ -63,109 +59,86 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
       customerId: 0,
       entrepreneurId: 0,
       priceTableId: 0,
-      planType: "3x",
-      amount: "0.00",
-      payHash: "",
+      amount: "",
       payStatus: "pending",
       payDate: "",
-      payLink: "",
       payExpiration: "",
       planExpirationDate: "",
+      payHash: "",
+      payLink: "",
       isActive: true,
     },
   });
 
-  // Reset form when dialog opens/closes or customerPlan changes
   useEffect(() => {
-    if (open) {
-      if (customerPlan) {
-        form.reset({
-          customerId: customerPlan.customerId,
-          entrepreneurId: customerPlan.entrepreneurId,
-          priceTableId: customerPlan.priceTableId,
-          planType: customerPlan.planType as "3x" | "12x",
-          amount: customerPlan.amount,
-          payHash: customerPlan.payHash || "",
-          payStatus: customerPlan.payStatus,
-          payDate: customerPlan.payDate ? new Date(customerPlan.payDate).toISOString().split('T')[0] : "",
-          payLink: customerPlan.payLink || "",
-          payExpiration: customerPlan.payExpiration ? new Date(customerPlan.payExpiration).toISOString().split('T')[0] : "",
-          planExpirationDate: customerPlan.planExpirationDate ? new Date(customerPlan.planExpirationDate).toISOString().split('T')[0] : "",
-          isActive: customerPlan.isActive ?? true,
-        });
-      } else {
-        form.reset({
-          customerId: 0,
-          entrepreneurId: 0,
-          priceTableId: 0,
-          planType: "3x",
-          amount: "0.00",
-          payHash: "",
-          payStatus: "pending",
-          payDate: "",
-          payLink: "",
-          payExpiration: "",
-          planExpirationDate: "",
-          isActive: true,
-        });
-      }
+    if (customerPlan) {
+      form.reset({
+        customerId: customerPlan.customerId,
+        entrepreneurId: customerPlan.entrepreneurId,
+        priceTableId: customerPlan.priceTableId,
+        amount: customerPlan.amount || "",
+        payStatus: customerPlan.payStatus as any,
+        payDate: customerPlan.payDate ? new Date(customerPlan.payDate).toISOString().split('T')[0] : "",
+        payExpiration: customerPlan.payExpiration ? new Date(customerPlan.payExpiration).toISOString().split('T')[0] : "",
+        planExpirationDate: customerPlan.planExpirationDate ? new Date(customerPlan.planExpirationDate).toISOString().split('T')[0] : "",
+        payHash: customerPlan.payHash || "",
+        payLink: customerPlan.payLink || "",
+        isActive: customerPlan.isActive ?? true,
+      });
+    } else {
+      form.reset({
+        customerId: 0,
+        entrepreneurId: 0,
+        priceTableId: 0,
+        amount: "",
+        payStatus: "pending",
+        payDate: "",
+        payExpiration: "",
+        planExpirationDate: "",
+        payHash: "",
+        payLink: "",
+        isActive: true,
+      });
     }
-  }, [open, customerPlan, form]);
+  }, [customerPlan, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerPlanFormData) => {
-      setIsLoading(true);
-      
-      // Convert date strings to proper format
-      const formattedData = {
+      const payload = {
         ...data,
         payDate: data.payDate ? new Date(data.payDate).toISOString() : null,
         payExpiration: data.payExpiration ? new Date(data.payExpiration).toISOString() : null,
         planExpirationDate: data.planExpirationDate ? new Date(data.planExpirationDate).toISOString() : null,
-        amount: data.amount,
       };
 
       if (customerPlan) {
-        const response = await fetch(`/api/customer-plans/${customerPlan.id}`, {
-          method: "PUT",
-          body: JSON.stringify(formattedData),
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-user-id': '1'
-          },
+        return apiRequest(`/api/customer-plans/${customerPlan.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+          headers: { "Content-Type": "application/json" },
         });
-        if (!response.ok) throw new Error('Failed to update customer plan');
-        return response.json();
       } else {
-        const response = await fetch("/api/customer-plans", {
+        return apiRequest("/api/customer-plans", {
           method: "POST",
-          body: JSON.stringify(formattedData),
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-user-id': '1'
-          },
+          body: JSON.stringify(payload),
+          headers: { "Content-Type": "application/json" },
         });
-        if (!response.ok) throw new Error('Failed to create customer plan');
-        return response.json();
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customer-plans"] });
       toast({
         title: "Success",
-        description: customerPlan ? "Customer plan updated successfully" : "Customer plan created successfully",
+        description: `Customer plan ${customerPlan ? "updated" : "created"} successfully`,
       });
       onClose();
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || `Failed to ${customerPlan ? 'update' : 'create'} customer plan`,
+        description: error.message || `Failed to ${customerPlan ? "update" : "create"} customer plan`,
         variant: "destructive",
       });
-    },
-    onSettled: () => {
-      setIsLoading(false);
     },
   });
 
@@ -173,50 +146,33 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
     mutation.mutate(data);
   };
 
-  // Watch for price table and plan type changes to auto-update amount
-  const watchedPriceTableId = form.watch("priceTableId");
-  const watchedPlanType = form.watch("planType");
-
-  useEffect(() => {
-    if (watchedPriceTableId && watchedPlanType) {
-      const selectedTable = priceTables.find(table => table.id === watchedPriceTableId);
-      if (selectedTable) {
-        const price = watchedPlanType === "3x" ? selectedTable.currentPrice3x : selectedTable.currentPrice12x;
-        form.setValue("amount", price);
-      }
-    }
-  }, [watchedPriceTableId, watchedPlanType, priceTables, form]);
-
-  const customers = users.filter(user => user.role === 'customer');
-  const entrepreneurs = users.filter(user => user.role === 'entrepreneur');
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {customerPlan ? "Edit Customer Plan" : "Create Customer Plan"}
           </DialogTitle>
           <DialogDescription>
             {customerPlan 
-              ? "Update the customer plan information below." 
-              : "Create a new customer plan by filling out the form below."
+              ? "Update the customer plan details below." 
+              : "Fill out the form below to create a new customer plan."
             }
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Customer</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                    <Select
                       value={field.value?.toString()}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -226,7 +182,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                       <SelectContent>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id.toString()}>
-                            {customer.name} - {customer.email}
+                            {customer.name} ({customer.email})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -242,9 +198,9 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Entrepreneur</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                    <Select
                       value={field.value?.toString()}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -254,7 +210,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                       <SelectContent>
                         {entrepreneurs.map((entrepreneur) => (
                           <SelectItem key={entrepreneur.id} value={entrepreneur.id.toString()}>
-                            {entrepreneur.name} - {entrepreneur.email}
+                            {entrepreneur.name} ({entrepreneur.email})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -265,16 +221,16 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="priceTableId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Price Table</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                    <Select
                       value={field.value?.toString()}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -284,7 +240,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                       <SelectContent>
                         {priceTables.map((table) => (
                           <SelectItem key={table.id} value={table.id.toString()}>
-                            {table.title}
+                            {table.title} - ${table.currentPrice3x} ({table.months}m)
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -296,49 +252,27 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
 
               <FormField
                 control={form.control}
-                name="planType"
+                name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select plan type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="3x">3 months</SelectItem>
-                        <SelectItem value="12x">12 months</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="0.00" type="number" step="0.01" />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount (R$)</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="text" placeholder="0.00" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="payStatus"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Payment Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -355,37 +289,27 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Active Status</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="payHash"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Hash</FormLabel>
-                  <FormControl>
-                    <Input {...field} value={field.value || ""} placeholder="Payment transaction hash" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="payLink"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Link</FormLabel>
-                  <FormControl>
-                    <Input {...field} value={field.value || ""} type="url" placeholder="https://payment-link.com" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="payDate"
@@ -431,43 +355,45 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
 
             <FormField
               control={form.control}
-              name="isActive"
+              name="payHash"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Active Plan
-                    </FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      Enable this customer plan
-                    </div>
-                  </div>
+                <FormItem>
+                  <FormLabel>Payment Hash</FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value ?? true}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Input {...field} placeholder="Payment transaction hash" />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="flex-1"
-                disabled={isLoading}
-              >
+            <FormField
+              control={form.control}
+              name="payLink"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment Link</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      placeholder="Payment gateway link or reference"
+                      className="min-h-[60px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={isLoading}
-              >
-                {isLoading ? "Saving..." : customerPlan ? "Update Plan" : "Create Plan"}
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending 
+                  ? (customerPlan ? "Updating..." : "Creating...") 
+                  : (customerPlan ? "Update Plan" : "Create Plan")
+                }
               </Button>
             </div>
           </form>

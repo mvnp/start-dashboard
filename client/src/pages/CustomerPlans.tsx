@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Eye, DollarSign, Users, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Plus, Edit, Trash2, CreditCard } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { CustomerPlanDialog } from "@/components/customer-plans/CustomerPlanDialog";
+import { apiRequest } from "@/lib/queryClient";
 import type { CustomerPlanWithDetails } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -14,6 +15,7 @@ export default function CustomerPlans() {
   const [selectedPlan, setSelectedPlan] = useState<CustomerPlanWithDetails | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: customerPlans = [], isLoading } = useQuery<CustomerPlanWithDetails[]>({
     queryKey: ["/api/customer-plans"],
@@ -23,11 +25,11 @@ export default function CustomerPlans() {
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/customer-plans/${id}`, {
         method: "DELETE",
-        headers: { 'x-user-id': '1' },
       });
       if (!response.ok) {
         throw new Error('Failed to delete customer plan');
       }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/customer-plans"] });
@@ -45,9 +47,27 @@ export default function CustomerPlans() {
     },
   });
 
-  const handleCreate = () => {
-    setSelectedPlan(null);
-    setIsDialogOpen(true);
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <Badge variant="default" className="bg-green-500">Paid</Badge>;
+      case 'pending':
+        return <Badge variant="secondary">Pending</Badge>;
+      case 'failed':
+        return <Badge variant="destructive">Failed</Badge>;
+      case 'expired':
+        return <Badge variant="outline">Expired</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getActiveBadge = (isActive: boolean) => {
+    return isActive ? (
+      <Badge variant="default" className="bg-blue-500">Active</Badge>
+    ) : (
+      <Badge variant="outline">Inactive</Badge>
+    );
   };
 
   const handleEdit = (plan: CustomerPlanWithDetails) => {
@@ -56,45 +76,31 @@ export default function CustomerPlans() {
   };
 
   const handleDelete = (plan: CustomerPlanWithDetails) => {
-    if (confirm(`Are you sure you want to delete this customer plan?`)) {
+    if (window.confirm(`Are you sure you want to delete the plan for ${plan.customer.name}?`)) {
       deleteMutation.mutate(plan.id);
     }
   };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setSelectedPlan(null);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
-      case 'expired':
-        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"><XCircle className="w-3 h-3 mr-1" />Expired</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const activePlans = customerPlans.filter(plan => plan.isActive && plan.payStatus === 'paid');
-  const totalRevenue = customerPlans
-    .filter(plan => plan.payStatus === 'paid')
-    .reduce((sum, plan) => sum + parseFloat(plan.amount || '0'), 0);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Customer Plans</h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Customer Plans</h1>
+            <p className="text-muted-foreground">Manage customer subscription plans and payments</p>
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        <div className="grid gap-4">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -103,163 +109,118 @@ export default function CustomerPlans() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Customer Plans</h1>
-          <p className="text-gray-600 dark:text-gray-300">Manage customer subscriptions and purchased plans</p>
+          <h1 className="text-3xl font-bold tracking-tight">Customer Plans</h1>
+          <p className="text-muted-foreground">
+            Manage customer subscription plans and payments ({customerPlans.length} total)
+          </p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Customer Plan
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Customer Plan
         </Button>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {customerPlans.length === 0 ? (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Plans</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{customerPlans.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {activePlans.length} active
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Customer Plans</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Get started by creating your first customer plan
             </p>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Customer Plan
+            </Button>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              From paid plans
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Plans</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activePlans.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently active
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Plans List */}
-      <div className="grid gap-4">
-        {customerPlans.length === 0 && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No customer plans found
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Get started by creating your first customer plan.
-              </p>
-              <Button onClick={handleCreate}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Customer Plan
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {customerPlans.map((plan) => (
-          <Card key={plan.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">{plan.priceTable.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-4">
-                    <span>Customer: {plan.customer.name}</span>
-                    <span>•</span>
-                    <span>Entrepreneur: {plan.entrepreneur.name}</span>
-                  </CardDescription>
+      ) : (
+        <div className="grid gap-4">
+          {customerPlans.map((plan) => (
+            <Card key={plan.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-lg">{plan.priceTable.title}</CardTitle>
+                    {getActiveBadge(plan.isActive ?? false)}
+                    {getStatusBadge(plan.payStatus)}
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(plan)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(plan)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(plan.payStatus)}
-                  {plan.isActive && <Badge variant="outline">Active</Badge>}
+                <CardDescription>{plan.priceTable.subtitle}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Customer</p>
+                    <p className="text-sm">{plan.customer.name}</p>
+                    <p className="text-xs text-muted-foreground">{plan.customer.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Entrepreneur</p>
+                    <p className="text-sm">{plan.entrepreneur.name}</p>
+                    <p className="text-xs text-muted-foreground">{plan.entrepreneur.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Amount</p>
+                    <p className="text-sm font-semibold">${plan.amount}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {plan.priceTable.months} months plan
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Payment Date</p>
+                    <p className="text-sm">
+                      {plan.payDate ? format(new Date(plan.payDate), 'MMM dd, yyyy') : 'Not paid'}
+                    </p>
+                    {plan.planExpirationDate && (
+                      <p className="text-xs text-muted-foreground">
+                        Expires: {format(new Date(plan.planExpirationDate), 'MMM dd, yyyy')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Plan Type</p>
-                  <p className="text-sm">{plan.planType}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Amount</p>
-                  <p className="text-sm font-semibold">R$ {plan.amount}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pay Date</p>
-                  <p className="text-sm">{plan.payDate ? format(new Date(plan.payDate), 'dd/MM/yyyy') : 'Not paid'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Expiration</p>
-                  <p className="text-sm">{plan.planExpirationDate ? format(new Date(plan.planExpirationDate), 'dd/MM/yyyy') : 'No expiration'}</p>
-                </div>
-              </div>
-              
-              {plan.payHash && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Hash</p>
-                  <p className="text-xs font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded truncate">{plan.payHash}</p>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(plan)}
-                  className="flex-1"
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                {plan.payLink && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(plan.payLink!, '_blank')}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    Payment
-                  </Button>
+                
+                {plan.payHash && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-muted-foreground">
+                      Payment Hash: <span className="font-mono">{plan.payHash.substring(0, 16)}...</span>
+                    </p>
+                  </div>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(plan)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <CustomerPlanDialog
         open={isDialogOpen}
-        onClose={handleCloseDialog}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setSelectedPlan(null);
+        }}
         customerPlan={selectedPlan}
       />
     </div>
