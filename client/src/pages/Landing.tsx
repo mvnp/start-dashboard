@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Users, CreditCard, Shield, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Landing() {
+  const { login } = useAuth();
+  
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    login();
   };
 
   return (

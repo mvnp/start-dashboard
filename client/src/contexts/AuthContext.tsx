@@ -5,6 +5,7 @@ interface AuthContextType {
   user: User | null;
   setUserRole: (role: UserRole) => void;
   logout: () => void;
+  login: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,7 +19,11 @@ const mockUser: User = {
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(mockUser);
+  const [user, setUser] = useState<User | null>(() => {
+    // Check if user is logged out in localStorage
+    const isLoggedOut = localStorage.getItem('isLoggedOut');
+    return isLoggedOut === 'true' ? null : mockUser;
+  });
 
   const setUserRole = (role: UserRole) => {
     if (user) {
@@ -28,10 +33,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    localStorage.setItem('isLoggedOut', 'true');
+  };
+
+  const login = () => {
+    setUser(mockUser);
+    localStorage.removeItem('isLoggedOut');
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUserRole, logout }}>
+    <AuthContext.Provider value={{ user, setUserRole, logout, login }}>
       {children}
     </AuthContext.Provider>
   );
