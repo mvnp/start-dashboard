@@ -99,10 +99,17 @@ export async function login(req: Request, res: Response) {
     }
 
     console.log('User found:', user.email, 'stored password hash length:', user.password.length);
+    console.log('First 10 chars of hash:', user.password.substring(0, 10));
     
     // Compare password with bcrypt hash
     const isPasswordValid = await bcrypt.compare(password, user.password);
     console.log('Password validation result:', isPasswordValid);
+    
+    // Test with fresh hash for comparison
+    const testHash = await bcrypt.hash(password, 10);
+    console.log('Test hash created:', testHash.substring(0, 10));
+    const testValidation = await bcrypt.compare(password, testHash);
+    console.log('Test validation result:', testValidation);
     
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });

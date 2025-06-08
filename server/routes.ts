@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { login, verifyToken, refreshToken, logout, logoutFromAllDevices, authenticateToken, authorize, authorizeEntrepreneurOrAdmin, authorizeResourceOwner } from "./auth";
 import type { User, PaymentGateway } from "@shared/schema";
-import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema, insertCustomerPlanSchema, updateCustomerPlanSchema, insertSupportTicketSchema, insertAccountingSchema, updateAccountingSchema } from "@shared/schema";
+import { users, insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema, insertCustomerPlanSchema, updateCustomerPlanSchema, insertSupportTicketSchema, insertAccountingSchema, updateAccountingSchema } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -24,28 +26,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", logout);
   app.post("/api/auth/logout-all", authenticateToken, logoutFromAllDevices);
   
-  // Temporary password reset endpoint for testing bcrypt
-  app.post("/api/auth/reset-admin", async (req, res) => {
+  // Temporary password reset endpoint for all users
+  app.post("/api/auth/reset-all-passwords", async (req, res) => {
     try {
       const { hashPassword } = await import('./auth');
       const hashedPassword = await hashPassword('pwd123');
       
-      // Direct database update to bypass double-hashing
-      const [updatedUser] = await db
+      // Reset all user passwords directly in database
+      const updatedUsers = await db
         .update(users)
         .set({ password: hashedPassword, updatedAt: new Date() })
-        .where(eq(users.email, 'admin@example.com'))
         .returning();
       
-      if (updatedUser) {
-        res.json({ 
-          message: 'Admin password reset to pwd123', 
-          email: updatedUser.email,
-          hashLength: hashedPassword.length 
-        });
-      } else {
-        res.status(404).json({ error: 'Admin user not found' });
-      }
+      res.json({ 
+        message: `All ${updatedUsers.length} user passwords reset to pwd123`, 
+        users: updatedUsers.map(u => u.email),
+        hashLength: hashedPassword.length 
+      });
     } catch (error) {
       console.error('Password reset error:', error);
       res.status(500).json({ error: 'Password reset failed' });
