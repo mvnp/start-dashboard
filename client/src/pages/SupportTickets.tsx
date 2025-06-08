@@ -12,7 +12,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { MessageSquare, Clock, User, Mail, Phone, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import type { SupportTicketWithAssignee } from "@shared/schema";
 
@@ -186,6 +185,7 @@ function TicketResponseDialog({ ticket, open, onClose }: TicketResponseDialogPro
 export default function SupportTickets() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicketWithAssignee | null>(null);
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: tickets = [], isLoading } = useQuery<SupportTicketWithAssignee[]>({
     queryKey: ["/api/support-tickets"],
@@ -203,18 +203,31 @@ export default function SupportTickets() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-muted rounded-lg" />
-          ))}
+      <div className="flex min-h-screen bg-background">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div className="flex-1 flex flex-col">
+          <TopBar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+          <main className="flex-1 overflow-auto">
+            <div className="p-6">
+              <div className="animate-pulse space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-32 bg-muted rounded-lg" />
+                ))}
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex min-h-screen bg-background">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col">
+        <TopBar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <main className="flex-1 overflow-auto">
+          <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Support Tickets</h1>
@@ -381,13 +394,16 @@ export default function SupportTickets() {
         </div>
       )}
 
-      {selectedTicket && (
-        <TicketResponseDialog
-          ticket={selectedTicket}
-          open={responseDialogOpen}
-          onClose={handleCloseDialog}
-        />
-      )}
+            {selectedTicket && (
+              <TicketResponseDialog
+                ticket={selectedTicket}
+                open={responseDialogOpen}
+                onClose={handleCloseDialog}
+              />
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
