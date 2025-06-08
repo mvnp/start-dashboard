@@ -119,6 +119,7 @@ export const insertCollaboratorSchema = createInsertSchema(collaborators).pick({
   skills: true,
   isActive: true,
   hireDate: true,
+  entrepreneurId: true,
 });
 
 export const updateCollaboratorSchema = createInsertSchema(collaborators).pick({

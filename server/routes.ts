@@ -298,8 +298,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Collaborators CRUD routes
-  app.get("/api/collaborators", async (req, res) => {
+  /**
+   * @swagger
+   * /api/collaborators:
+   *   get:
+   *     tags: [Collaborators]
+   *     summary: Get all collaborators
+   *     description: Retrieve collaborators based on user role and permissions. Entrepreneurs see their collaborators, super-admins see all.
+   *     parameters:
+   *       - in: query
+   *         name: entrepreneurId
+   *         schema:
+   *           type: integer
+   *         description: Filter collaborators by entrepreneur ID
+   *     responses:
+   *       200:
+   *         description: List of collaborators
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Collaborator'
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Insufficient permissions
+   *       500:
+   *         description: Internal server error
+   */
+  app.get("/api/collaborators", authenticateToken, authorizeEntrepreneurOrAdmin, async (req, res) => {
     try {
       const entrepreneurId = req.query.entrepreneurId;
       let collaborators;
@@ -317,7 +345,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/collaborators/:id", async (req, res) => {
+  /**
+   * @swagger
+   * /api/collaborators/{id}:
+   *   get:
+   *     tags: [Collaborators]
+   *     summary: Get collaborator by ID
+   *     description: Retrieve a specific collaborator by their ID
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Collaborator ID
+   *     responses:
+   *       200:
+   *         description: Collaborator details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Collaborator'
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Insufficient permissions
+   *       404:
+   *         description: Collaborator not found
+   *       500:
+   *         description: Internal server error
+   */
+  app.get("/api/collaborators/:id", authenticateToken, authorizeEntrepreneurOrAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const collaborator = await storage.getCollaborator(id);
@@ -331,11 +389,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/collaborators", async (req, res) => {
+  /**
+   * @swagger
+   * /api/collaborators:
+   *   post:
+   *     tags: [Collaborators]
+   *     summary: Create a new collaborator
+   *     description: Create a new collaborator under the authenticated entrepreneur
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateCollaborator'
+   *     responses:
+   *       201:
+   *         description: Collaborator created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Collaborator'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Insufficient permissions
+   *       500:
+   *         description: Internal server error
+   */
+  app.post("/api/collaborators", authenticateToken, authorize(['entrepreneur', 'super-admin']), async (req, res) => {
     try {
       const validatedData = insertCollaboratorSchema.parse(req.body);
-      // For now, using entrepreneur ID 2 - in real implementation, this would come from authentication
-      const collaborator = await storage.createCollaborator({ ...validatedData, entrepreneurId: 2 });
+      // Get entrepreneur ID from authenticated user
+      const entrepreneurId = req.user?.role === 'super-admin' ? validatedData.entrepreneurId || req.user.entrepreneurId : req.user?.entrepreneurId;
+      if (!entrepreneurId) {
+        return res.status(400).json({ message: "Entrepreneur ID is required" });
+      }
+      const collaborator = await storage.createCollaborator({ ...validatedData, entrepreneurId });
       res.status(201).json(collaborator);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -346,7 +448,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/collaborators/:id", async (req, res) => {
+  /**
+   * @swagger
+   * /api/collaborators/{id}:
+   *   put:
+   *     tags: [Collaborators]
+   *     summary: Update collaborator
+   *     description: Update an existing collaborator's information
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Collaborator ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 example: "Jane Smith"
+   *               email:
+   *                 type: string
+   *                 example: "jane.smith@example.com"
+   *               role:
+   *                 type: string
+   *                 example: "Senior Developer"
+   *               department:
+   *                 type: string
+   *                 example: "Engineering"
+   *               phone:
+   *                 type: string
+   *                 example: "+1234567890"
+   *               skills:
+   *                 type: string
+   *                 example: "React, Node.js, TypeScript"
+   *               hireDate:
+   *                 type: string
+   *                 format: date
+   *               isActive:
+   *                 type: boolean
+   *                 default: true
+   *     responses:
+   *       200:
+   *         description: Collaborator updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Collaborator'
+   *       400:
+   *         description: Invalid data
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Insufficient permissions
+   *       404:
+   *         description: Collaborator not found
+   *       500:
+   *         description: Internal server error
+   */
+  app.put("/api/collaborators/:id", authenticateToken, authorize(['entrepreneur', 'super-admin']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = updateCollaboratorSchema.parse(req.body);
@@ -364,7 +529,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/collaborators/:id", async (req, res) => {
+  /**
+   * @swagger
+   * /api/collaborators/{id}:
+   *   delete:
+   *     tags: [Collaborators]
+   *     summary: Delete collaborator
+   *     description: Delete a collaborator by ID. Only entrepreneurs and super-admins can delete collaborators.
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Collaborator ID
+   *     responses:
+   *       204:
+   *         description: Collaborator deleted successfully
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Insufficient permissions
+   *       404:
+   *         description: Collaborator not found
+   *       500:
+   *         description: Internal server error
+   */
+  app.delete("/api/collaborators/:id", authenticateToken, authorize(['entrepreneur', 'super-admin']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteCollaborator(id);
