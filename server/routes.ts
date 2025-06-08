@@ -23,6 +23,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/refresh", refreshToken);
   app.post("/api/auth/logout", logout);
   app.post("/api/auth/logout-all", authenticateToken, logoutFromAllDevices);
+  
+  // Temporary password reset endpoint for testing bcrypt
+  app.post("/api/auth/reset-admin", async (req, res) => {
+    try {
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword('pwd123');
+      
+      // Direct database update to bypass double-hashing
+      const [updatedUser] = await db
+        .update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.email, 'admin@example.com'))
+        .returning();
+      
+      if (updatedUser) {
+        res.json({ 
+          message: 'Admin password reset to pwd123', 
+          email: updatedUser.email,
+          hashLength: hashedPassword.length 
+        });
+      } else {
+        res.status(404).json({ error: 'Admin user not found' });
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
+      res.status(500).json({ error: 'Password reset failed' });
+    }
+  });
 
   // Utility routes for mock data generation
   app.post("/api/utils/bcrypt", async (req, res) => {

@@ -105,8 +105,8 @@ export class DatabaseStorage implements IStorage {
   async updateUser(id: number, updateUser: UpdateUser): Promise<User | undefined> {
     const updateData = { ...updateUser, updatedAt: new Date() };
     
-    // Hash password if it's being updated
-    if (updateUser.password) {
+    // Hash password if it's being updated and not already hashed
+    if (updateUser.password && !updateUser.password.startsWith('$2b$')) {
       updateData.password = await hashPassword(updateUser.password);
     }
     
