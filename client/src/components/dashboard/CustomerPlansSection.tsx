@@ -191,7 +191,7 @@ export function CustomerPlansSection() {
                       {plan.isActive && <Badge variant="outline">Active</Badge>}
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Customer: {plan.customer.name} • Entrepreneur: {plan.entrepreneur.name}
+                      Customer: {plan.customer.name}
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                       <span>Plan: {plan.planType}</span>

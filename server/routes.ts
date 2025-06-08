@@ -626,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (user?.role !== 'super-admin' && 
-          existingPlan.entrepreneurId !== userId) {
+          existingPlan.customerId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -659,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (user?.role !== 'super-admin' && 
-          existingPlan.entrepreneurId !== userId) {
+          existingPlan.customerId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
