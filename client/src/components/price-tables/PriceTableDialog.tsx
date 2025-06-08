@@ -260,12 +260,10 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
                     <FormLabel>Current Price ($)</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
-                        step="0.01" 
+                        type="text" 
                         placeholder="29.99" 
                         {...field}
-                        value={field.value || 0}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -281,12 +279,10 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
                     <FormLabel>Old Price ($)</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
-                        step="0.01" 
+                        type="text" 
                         placeholder="39.99" 
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                       />
                     </FormControl>
                     <FormDescription>Optional - shows strikethrough pricing</FormDescription>
