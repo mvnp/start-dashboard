@@ -48,8 +48,10 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
     defaultValues: {
       title: "",
       subtitle: "",
-      currentPrice: "0",
-      oldPrice: "",
+      currentPrice3x: "",
+      oldPrice3x: "",
+      currentPrice12x: "",
+      oldPrice12x: "",
       image1: "",
       image2: "",
       buyLink: "",
@@ -252,45 +254,94 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="currentPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Price ($)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="text" 
-                        placeholder="29.99" 
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">3-Month Pricing</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="currentPrice3x"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Price 3x</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="text" 
+                            placeholder="89.99" 
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="oldPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Old Price ($)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="text" 
-                        placeholder="39.99" 
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormDescription>Optional - shows strikethrough pricing</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="oldPrice3x"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Old Price 3x</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="text" 
+                            placeholder="119.99" 
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription>Optional - shows strikethrough pricing</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">12-Month Pricing</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="currentPrice12x"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Price 12x</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="text" 
+                            placeholder="299.99" 
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="oldPrice12x"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Old Price 12x</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="text" 
+                            placeholder="399.99" 
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription>Optional - shows strikethrough pricing</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
 
             <FormField
