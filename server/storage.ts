@@ -1,6 +1,6 @@
-import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, supportTickets, accounting, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails, type SupportTicket, type InsertSupportTicket, type UpdateSupportTicket, type SupportTicketWithAssignee, type Accounting, type InsertAccounting, type UpdateAccounting } from "@shared/schema";
+import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, supportTickets, accounting, refreshTokens, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails, type SupportTicket, type InsertSupportTicket, type UpdateSupportTicket, type SupportTicketWithAssignee, type Accounting, type InsertAccounting, type UpdateAccounting, type RefreshToken, type InsertRefreshToken } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -61,6 +61,13 @@ export interface IStorage {
   createAccountingEntry(entry: InsertAccounting): Promise<Accounting>;
   updateAccountingEntry(id: number, entry: UpdateAccounting): Promise<Accounting | undefined>;
   deleteAccountingEntry(id: number): Promise<boolean>;
+
+  // Refresh Token operations
+  createRefreshToken(token: InsertRefreshToken): Promise<RefreshToken>;
+  getRefreshToken(token: string): Promise<RefreshToken | undefined>;
+  revokeRefreshToken(token: string): Promise<boolean>;
+  revokeAllUserTokens(userId: number): Promise<boolean>;
+  cleanExpiredTokens(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -425,6 +432,71 @@ export class DatabaseStorage implements IStorage {
   async deleteAccountingEntry(id: number): Promise<boolean> {
     const result = await db.delete(accounting).where(eq(accounting.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Refresh Token operations
+  async createRefreshToken(tokenData: InsertRefreshToken): Promise<RefreshToken> {
+    const [token] = await db
+      .insert(refreshTokens)
+      .values(tokenData)
+      .returning();
+    return token;
+  }
+
+  async getRefreshToken(token: string): Promise<RefreshToken | undefined> {
+    const [refreshToken] = await db
+      .select()
+      .from(refreshTokens)
+      .where(
+        and(
+          eq(refreshTokens.token, token),
+          eq(refreshTokens.isRevoked, false)
+        )
+      );
+    return refreshToken || undefined;
+  }
+
+  async revokeRefreshToken(token: string): Promise<boolean> {
+    const result = await db
+      .update(refreshTokens)
+      .set({ 
+        isRevoked: true, 
+        revokedAt: new Date() 
+      })
+      .where(eq(refreshTokens.token, token));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async revokeAllUserTokens(userId: number): Promise<boolean> {
+    const result = await db
+      .update(refreshTokens)
+      .set({ 
+        isRevoked: true, 
+        revokedAt: new Date() 
+      })
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          eq(refreshTokens.isRevoked, false)
+        )
+      );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async cleanExpiredTokens(): Promise<number> {
+    const result = await db
+      .update(refreshTokens)
+      .set({ 
+        isRevoked: true, 
+        revokedAt: new Date() 
+      })
+      .where(
+        and(
+          lt(refreshTokens.expiresAt, new Date()),
+          eq(refreshTokens.isRevoked, false)
+        )
+      );
+    return result.rowCount ?? 0;
   }
 }
 

@@ -36,6 +36,26 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Refresh Tokens table for JWT token management
+export const refreshTokens = pgTable("refresh_tokens", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isRevoked: boolean("is_revoked").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  revokedAt: timestamp("revoked_at"),
+});
+
+export const insertRefreshTokenSchema = createInsertSchema(refreshTokens).pick({
+  token: true,
+  userId: true,
+  expiresAt: true,
+});
+
+export type InsertRefreshToken = z.infer<typeof insertRefreshTokenSchema>;
+export type RefreshToken = typeof refreshTokens.$inferSelect;
+
 export const paymentGateways = pgTable("payment_gateways", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

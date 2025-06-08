@@ -1,9 +1,23 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
+import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m'; // Short-lived access token
+const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d'; // 7 days for refresh token
+
+// Helper function to generate secure refresh token
+function generateRefreshToken(): string {
+  return crypto.randomBytes(40).toString('hex');
+}
+
+// Helper function to calculate expiration date
+function getRefreshTokenExpiry(): Date {
+  const now = new Date();
+  const expiryDays = parseInt(REFRESH_TOKEN_EXPIRES_IN.replace('d', '')) || 7;
+  return new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000);
+}
 
 // Extend Request interface to include user
 declare global {
@@ -89,10 +103,20 @@ export async function login(req: Request, res: Response) {
       entrepreneurId: user.entrepreneurId
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as SignOptions);
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as SignOptions);
+    
+    // Generate and store refresh token
+    const refreshToken = generateRefreshToken();
+    await storage.createRefreshToken({
+      token: refreshToken,
+      userId: user.id,
+      expiresAt: getRefreshTokenExpiry()
+    });
 
     res.json({
-      token,
+      accessToken,
+      refreshToken,
+      expiresIn: JWT_EXPIRES_IN,
       user: {
         id: user.id,
         name: user.name,
