@@ -16,8 +16,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (userRole === 'super-admin') {
         // Super admin sees all users
         users = await storage.getAllUsers();
-      } else if (userRole === 'entrepreneur' && entrepreneurId) {
-        // Entrepreneur sees their own users (collaborators and customers)
+      } else if ((userRole === 'entrepreneur' || userRole === 'collaborator') && entrepreneurId) {
+        // Entrepreneur and collaborators see their entrepreneur's users
         users = await storage.getAllUsers(entrepreneurId);
       } else {
         users = [];
