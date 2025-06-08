@@ -115,3 +115,33 @@ export const updateCollaboratorSchema = createInsertSchema(collaborators).pick({
 export type InsertCollaborator = z.infer<typeof insertCollaboratorSchema>;
 export type UpdateCollaborator = z.infer<typeof updateCollaboratorSchema>;
 export type Collaborator = typeof collaborators.$inferSelect;
+
+export const whatsappInstances = pgTable("whatsapp_instances", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  instanceNumber: text("instance_number").notNull().unique(),
+  apiUrl: text("api_url").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  entrepreneurId: integer("entrepreneur_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWhatsappInstanceSchema = createInsertSchema(whatsappInstances).pick({
+  name: true,
+  instanceNumber: true,
+  apiUrl: true,
+  isActive: true,
+});
+
+export const updateWhatsappInstanceSchema = createInsertSchema(whatsappInstances).pick({
+  name: true,
+  instanceNumber: true,
+  apiUrl: true,
+  isActive: true,
+}).partial();
+
+export type InsertWhatsappInstance = z.infer<typeof insertWhatsappInstanceSchema>;
+export type UpdateWhatsappInstance = z.infer<typeof updateWhatsappInstanceSchema>;
+export type WhatsappInstance = typeof whatsappInstances.$inferSelect;

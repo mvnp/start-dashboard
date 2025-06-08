@@ -1,4 +1,4 @@
-import { users, paymentGateways, collaborators, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator } from "@shared/schema";
+import { users, paymentGateways, collaborators, whatsappInstances, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -25,6 +25,13 @@ export interface IStorage {
   createCollaborator(collaborator: InsertCollaborator & { entrepreneurId: number }): Promise<Collaborator>;
   updateCollaborator(id: number, collaborator: UpdateCollaborator): Promise<Collaborator | undefined>;
   deleteCollaborator(id: number): Promise<boolean>;
+
+  // WhatsApp Instance operations
+  getWhatsappInstance(id: number): Promise<WhatsappInstance | undefined>;
+  getAllWhatsappInstances(entrepreneurId?: number): Promise<WhatsappInstance[]>;
+  createWhatsappInstance(instance: InsertWhatsappInstance & { createdBy: number; entrepreneurId: number }): Promise<WhatsappInstance>;
+  updateWhatsappInstance(id: number, instance: UpdateWhatsappInstance): Promise<WhatsappInstance | undefined>;
+  deleteWhatsappInstance(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -139,6 +146,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCollaborator(id: number): Promise<boolean> {
     const result = await db.delete(collaborators).where(eq(collaborators.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // WhatsApp Instance operations
+  async getWhatsappInstance(id: number): Promise<WhatsappInstance | undefined> {
+    const [instance] = await db.select().from(whatsappInstances).where(eq(whatsappInstances.id, id));
+    return instance || undefined;
+  }
+
+  async getAllWhatsappInstances(entrepreneurId?: number): Promise<WhatsappInstance[]> {
+    if (entrepreneurId) {
+      return await db.select().from(whatsappInstances).where(eq(whatsappInstances.entrepreneurId, entrepreneurId));
+    }
+    return await db.select().from(whatsappInstances);
+  }
+
+  async createWhatsappInstance(instance: InsertWhatsappInstance & { createdBy: number; entrepreneurId: number }): Promise<WhatsappInstance> {
+    const [newInstance] = await db
+      .insert(whatsappInstances)
+      .values(instance)
+      .returning();
+    return newInstance;
+  }
+
+  async updateWhatsappInstance(id: number, instance: UpdateWhatsappInstance): Promise<WhatsappInstance | undefined> {
+    const [updatedInstance] = await db
+      .update(whatsappInstances)
+      .set({ ...instance, updatedAt: new Date() })
+      .where(eq(whatsappInstances.id, id))
+      .returning();
+    return updatedInstance || undefined;
+  }
+
+  async deleteWhatsappInstance(id: number): Promise<boolean> {
+    const result = await db.delete(whatsappInstances).where(eq(whatsappInstances.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }
