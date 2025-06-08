@@ -156,6 +156,7 @@ export const priceTables = pgTable("price_tables", {
   currentPrice3x: text("current_price_3x").notNull(),
   oldPrice12x: text("old_price_12x"),
   currentPrice12x: text("current_price_12x").notNull(),
+  months: integer("months").default(3),
   image1: varchar("image1", { length: 500 }),
   image2: varchar("image2", { length: 500 }),
   buyLink: varchar("buy_link", { length: 500 }).notNull(),
