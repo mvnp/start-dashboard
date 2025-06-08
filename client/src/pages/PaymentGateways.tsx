@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Search, CreditCard, Shield, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PaymentGatewayDialog } from '@/components/payment-gateways/PaymentGatewayDialog';
@@ -30,11 +31,11 @@ export default function PaymentGateways() {
   const [editingGateway, setEditingGateway] = useState<PaymentGateway | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: gateways = [], isLoading } = useQuery<PaymentGateway[]>({
     queryKey: ['/api/payment-gateways', user.role, user.id],
-    queryFn: () => apiRequest(`/api/payment-gateways?role=${user.role}&entrepreneurId=${user.id}`),
   });
 
   const deleteGatewayMutation = useMutation({
