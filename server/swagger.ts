@@ -198,6 +198,17 @@ const options = {
             },
             startDate: { type: 'string', format: 'date-time' },
             endDate: { type: 'string', format: 'date-time', nullable: true },
+            payHash: { type: 'string', nullable: true, example: 'hash_abc123' },
+            payStatus: { 
+              type: 'string', 
+              enum: ['pending', 'paid', 'failed', 'expired'],
+              example: 'paid'
+            },
+            payDate: { type: 'string', format: 'date-time', nullable: true },
+            payLink: { type: 'string', nullable: true, example: 'https://payment.example.com/pay/123' },
+            payExpiration: { type: 'string', format: 'date-time', nullable: true },
+            planExpirationDate: { type: 'string', format: 'date-time', nullable: true },
+            isActive: { type: 'boolean', example: true },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
@@ -234,9 +245,18 @@ const options = {
               enum: ['low', 'medium', 'high', 'urgent'],
               example: 'high'
             },
+            name: { type: 'string', example: 'John Customer' },
+            email: { type: 'string', example: 'john@example.com' },
+            phone: { type: 'string', nullable: true, example: '+1234567890' },
+            category: { 
+              type: 'string', 
+              enum: ['technical', 'billing', 'feature', 'bug', 'general'],
+              example: 'billing'
+            },
+            message: { type: 'string', example: 'I am having trouble with my payment method...' },
             status: { 
               type: 'string', 
-              enum: ['open', 'in-progress', 'resolved', 'closed'],
+              enum: ['open', 'in_progress', 'resolved', 'closed'],
               example: 'open'
             },
             customerId: { type: 'integer', example: 1 },
@@ -247,17 +267,23 @@ const options = {
         },
         CreateSupportTicket: {
           type: 'object',
-          required: ['subject', 'description', 'priority', 'customerId'],
+          required: ['name', 'email', 'subject', 'category', 'message'],
           properties: {
+            name: { type: 'string', example: 'John Customer' },
+            email: { type: 'string', example: 'john@example.com' },
+            phone: { type: 'string', example: '+1234567890' },
             subject: { type: 'string', example: 'Payment Issue' },
-            description: { type: 'string', example: 'Unable to process payment' },
+            category: { 
+              type: 'string', 
+              enum: ['technical', 'billing', 'feature', 'bug', 'general'],
+              example: 'billing'
+            },
             priority: { 
               type: 'string', 
               enum: ['low', 'medium', 'high', 'urgent'],
-              example: 'high'
+              default: 'medium'
             },
-            customerId: { type: 'integer', example: 1 },
-            assignedTo: { type: 'integer', example: 2 }
+            message: { type: 'string', example: 'I am having trouble with my payment method and need assistance.' }
           }
         },
         Accounting: {
@@ -276,6 +302,38 @@ const options = {
             amount: { type: 'string', example: '1299.99' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        CreateAccounting: {
+          type: 'object',
+          required: ['entrepreneurId', 'category', 'description', 'date', 'type', 'amount'],
+          properties: {
+            entrepreneurId: { type: 'integer', example: 2 },
+            category: { type: 'string', example: 'Software Subscription' },
+            description: { type: 'string', example: 'Monthly payment for CRM software' },
+            date: { type: 'string', format: 'date-time', example: '2024-01-15T10:30:00Z' },
+            type: { 
+              type: 'string', 
+              enum: ['receives', 'expenses'],
+              example: 'expenses'
+            },
+            amount: { 
+              type: 'string', 
+              pattern: '^\\d+\\.\\d{2}$',
+              example: '299.99'
+            }
+          }
+        },
+        RefreshToken: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            token: { type: 'string', example: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0' },
+            userId: { type: 'integer', example: 1 },
+            expiresAt: { type: 'string', format: 'date-time' },
+            isRevoked: { type: 'boolean', example: false },
+            createdAt: { type: 'string', format: 'date-time' },
+            revokedAt: { type: 'string', format: 'date-time', nullable: true }
           }
         },
         CreateAccounting: {
