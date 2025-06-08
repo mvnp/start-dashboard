@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   role: varchar("role", { length: 50 }).notNull().default("customer"),
   avatar: text("avatar"),
+  entrepreneurId: integer("entrepreneur_id"), // References users.id, null for super-admin and entrepreneurs
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -17,6 +18,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   role: true,
   avatar: true,
+  entrepreneurId: true,
 });
 
 export const updateUserSchema = createInsertSchema(users).pick({
@@ -24,6 +26,7 @@ export const updateUserSchema = createInsertSchema(users).pick({
   email: true,
   role: true,
   avatar: true,
+  entrepreneurId: true,
 }).partial();
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -39,6 +42,7 @@ export const paymentGateways = pgTable("payment_gateways", {
   token: text("token").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdBy: integer("created_by").references(() => users.id),
+  entrepreneurId: integer("entrepreneur_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

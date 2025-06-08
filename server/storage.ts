@@ -6,15 +6,15 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getAllUsers(): Promise<User[]>;
+  getAllUsers(entrepreneurId?: number): Promise<User[]>; // Super admin sees all, entrepreneur sees their users
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: UpdateUser): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
   
   // Payment Gateway operations
   getPaymentGateway(id: number): Promise<PaymentGateway | undefined>;
-  getAllPaymentGateways(): Promise<PaymentGateway[]>;
-  createPaymentGateway(gateway: InsertPaymentGateway & { createdBy: number }): Promise<PaymentGateway>;
+  getAllPaymentGateways(entrepreneurId?: number): Promise<PaymentGateway[]>; // Super admin sees all, entrepreneur sees their gateways
+  createPaymentGateway(gateway: InsertPaymentGateway & { createdBy: number; entrepreneurId: number }): Promise<PaymentGateway>;
   updatePaymentGateway(id: number, gateway: UpdatePaymentGateway): Promise<PaymentGateway | undefined>;
   deletePaymentGateway(id: number): Promise<boolean>;
 
