@@ -52,40 +52,56 @@ const options = {
         },
         CreateUser: {
           type: 'object',
-          required: ['name', 'email', 'role'],
+          required: ['name', 'email', 'password', 'role'],
           properties: {
             name: { type: 'string', example: 'John Doe' },
-            email: { type: 'string', example: 'john@example.com' },
+            email: { type: 'string', format: 'email', example: 'john@example.com' },
+            password: { type: 'string', minLength: 6, example: 'securePassword123' },
             role: { 
               type: 'string', 
               enum: ['super-admin', 'entrepreneur', 'collaborator', 'customer'],
               example: 'entrepreneur'
             },
-            entrepreneurId: { type: 'integer', nullable: true, example: 1 }
+            avatar: { type: 'string', example: 'https://example.com/avatar.jpg' },
+            entrepreneurId: { type: 'integer', nullable: true, example: 2 }
           }
         },
         PaymentGateway: {
           type: 'object',
           properties: {
             id: { type: 'integer', example: 1 },
-            name: { type: 'string', example: 'Stripe Gateway' },
-            type: { type: 'string', example: 'stripe' },
+            name: { type: 'string', example: 'Asaas Payment Gateway' },
+            type: { 
+              type: 'string', 
+              enum: ['asaas', 'mercado_pago', 'pagseguro'],
+              example: 'asaas'
+            },
+            apiUrl: { type: 'string', example: 'https://www.asaas.com/api/v3' },
+            publicKey: { type: 'string', example: 'pub_abc123456789' },
+            token: { type: 'string', example: '$aact_YTU5YTE0M2M2N2I4MTliNzk0YTI5...' },
+            email: { type: 'string', nullable: true, example: 'payment@business.com' },
             isActive: { type: 'boolean', example: true },
-            config: { type: 'object', example: { apiKey: 'sk_test_...' } },
-            entrepreneurId: { type: 'integer', example: 1 },
-            createdBy: { type: 'integer', example: 1 },
+            createdBy: { type: 'integer', nullable: true, example: 1 },
+            entrepreneurId: { type: 'integer', example: 2 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
         },
         CreatePaymentGateway: {
           type: 'object',
-          required: ['name', 'type', 'config'],
+          required: ['name', 'type', 'apiUrl', 'publicKey', 'token'],
           properties: {
-            name: { type: 'string', example: 'Stripe Gateway' },
-            type: { type: 'string', example: 'stripe' },
-            isActive: { type: 'boolean', default: true },
-            config: { type: 'object', example: { apiKey: 'sk_test_...' } }
+            name: { type: 'string', example: 'Asaas Payment Gateway' },
+            type: { 
+              type: 'string', 
+              enum: ['asaas', 'mercado_pago', 'pagseguro'],
+              example: 'asaas'
+            },
+            apiUrl: { type: 'string', example: 'https://www.asaas.com/api/v3' },
+            publicKey: { type: 'string', example: 'pub_abc123456789' },
+            token: { type: 'string', example: '$aact_YTU5YTE0M2M2N2I4MTliNzk0YTI5...' },
+            email: { type: 'string', example: 'payment@business.com' },
+            isActive: { type: 'boolean', default: true }
           }
         },
         Collaborator: {
@@ -124,9 +140,8 @@ const options = {
           properties: {
             id: { type: 'integer', example: 1 },
             name: { type: 'string', example: 'Business WhatsApp' },
-            instanceId: { type: 'string', example: 'wa_instance_123' },
-            accessToken: { type: 'string', example: 'token_abc123' },
-            webhookUrl: { type: 'string', nullable: true, example: 'https://api.example.com/webhook' },
+            instanceNumber: { type: 'string', example: 'wa_instance_123' },
+            apiUrl: { type: 'string', example: 'https://api.whatsapp.com/instance/123' },
             isActive: { type: 'boolean', example: true },
             entrepreneurId: { type: 'integer', example: 1 },
             createdBy: { type: 'integer', example: 1 },
@@ -136,12 +151,11 @@ const options = {
         },
         CreateWhatsappInstance: {
           type: 'object',
-          required: ['name', 'instanceId', 'accessToken'],
+          required: ['name', 'instanceNumber', 'apiUrl'],
           properties: {
             name: { type: 'string', example: 'Business WhatsApp' },
-            instanceId: { type: 'string', example: 'wa_instance_123' },
-            accessToken: { type: 'string', example: 'token_abc123' },
-            webhookUrl: { type: 'string', example: 'https://api.example.com/webhook' },
+            instanceNumber: { type: 'string', example: 'wa_instance_123' },
+            apiUrl: { type: 'string', example: 'https://api.whatsapp.com/instance/123' },
             isActive: { type: 'boolean', default: true }
           }
         },
@@ -149,34 +163,48 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'integer', example: 1 },
-            title: { type: 'string', example: 'Basic Plan' },
-            subtitle: { type: 'string', example: 'Perfect for small businesses' },
-            currentPrice3x: { type: 'string', example: '29.99' },
-            currentPrice12x: { type: 'string', example: '99.99' },
-            months: { type: 'integer', example: 12 },
-            features: { 
+            title: { type: 'string', example: 'Premium Business Plan', maxLength: 255 },
+            subtitle: { type: 'string', nullable: true, example: 'Perfect for growing businesses', maxLength: 500 },
+            advantages: { 
               type: 'array', 
               items: { type: 'string' },
-              example: ['Feature 1', 'Feature 2', 'Feature 3']
+              example: ['Unlimited users', '24/7 support', 'Advanced analytics', 'Custom integrations']
             },
+            oldPrice3x: { type: 'string', nullable: true, example: '49.99' },
+            currentPrice3x: { type: 'string', example: '39.99' },
+            oldPrice12x: { type: 'string', nullable: true, example: '149.99' },
+            currentPrice12x: { type: 'string', example: '119.99' },
+            months: { type: 'integer', default: 3, example: 3 },
+            image1: { type: 'string', nullable: true, example: 'https://example.com/plan-image1.jpg', maxLength: 500 },
+            image2: { type: 'string', nullable: true, example: 'https://example.com/plan-image2.jpg', maxLength: 500 },
+            buyLink: { type: 'string', example: 'https://checkout.example.com/premium', maxLength: 500 },
+            isActive: { type: 'boolean', default: true, example: true },
+            displayOrder: { type: 'integer', default: 0, example: 1 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
         },
         CreatePriceTable: {
           type: 'object',
-          required: ['title', 'currentPrice3x', 'currentPrice12x', 'months'],
+          required: ['title', 'currentPrice3x', 'currentPrice12x', 'buyLink'],
           properties: {
-            title: { type: 'string', example: 'Basic Plan' },
-            subtitle: { type: 'string', example: 'Perfect for small businesses' },
-            currentPrice3x: { type: 'string', example: '29.99' },
-            currentPrice12x: { type: 'string', example: '99.99' },
-            months: { type: 'integer', example: 12 },
-            features: { 
+            title: { type: 'string', example: 'Premium Business Plan', maxLength: 255 },
+            subtitle: { type: 'string', example: 'Perfect for growing businesses', maxLength: 500 },
+            advantages: { 
               type: 'array', 
               items: { type: 'string' },
-              example: ['Feature 1', 'Feature 2', 'Feature 3']
-            }
+              example: ['Unlimited users', '24/7 support', 'Advanced analytics']
+            },
+            oldPrice3x: { type: 'string', example: '49.99' },
+            currentPrice3x: { type: 'string', example: '39.99' },
+            oldPrice12x: { type: 'string', example: '149.99' },
+            currentPrice12x: { type: 'string', example: '119.99' },
+            months: { type: 'integer', default: 3, example: 3 },
+            image1: { type: 'string', example: 'https://example.com/plan-image1.jpg', maxLength: 500 },
+            image2: { type: 'string', example: 'https://example.com/plan-image2.jpg', maxLength: 500 },
+            buyLink: { type: 'string', example: 'https://checkout.example.com/premium', maxLength: 500 },
+            isActive: { type: 'boolean', default: true },
+            displayOrder: { type: 'integer', default: 0, example: 1 }
           }
         },
         CustomerPlan: {
@@ -187,50 +215,57 @@ const options = {
             priceTableId: { type: 'integer', example: 1 },
             planType: { 
               type: 'string', 
-              enum: ['monthly_3x', 'annual_12x'],
-              example: 'annual_12x'
+              enum: ['3x', '12x'],
+              example: '12x'
             },
-            amount: { type: 'string', example: '99.99' },
-            status: { 
+            amount: { 
               type: 'string', 
-              enum: ['active', 'inactive', 'cancelled'],
-              example: 'active'
+              pattern: '^\\d+\\.\\d{2}$',
+              example: '119.99'
             },
-            startDate: { type: 'string', format: 'date-time' },
-            endDate: { type: 'string', format: 'date-time', nullable: true },
-            payHash: { type: 'string', nullable: true, example: 'hash_abc123' },
+            payHash: { type: 'string', nullable: true, example: 'hash_abc123456' },
             payStatus: { 
               type: 'string', 
               enum: ['pending', 'paid', 'failed', 'expired'],
+              default: 'pending',
               example: 'paid'
             },
             payDate: { type: 'string', format: 'date-time', nullable: true },
             payLink: { type: 'string', nullable: true, example: 'https://payment.example.com/pay/123' },
             payExpiration: { type: 'string', format: 'date-time', nullable: true },
             planExpirationDate: { type: 'string', format: 'date-time', nullable: true },
-            isActive: { type: 'boolean', example: true },
+            isActive: { type: 'boolean', default: true, example: true },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
         },
         CreateCustomerPlan: {
           type: 'object',
-          required: ['customerId', 'priceTableId', 'planType'],
+          required: ['customerId', 'priceTableId', 'planType', 'amount'],
           properties: {
             customerId: { type: 'integer', example: 1 },
             priceTableId: { type: 'integer', example: 1 },
             planType: { 
               type: 'string', 
-              enum: ['monthly_3x', 'annual_12x'],
-              example: 'annual_12x'
+              enum: ['3x', '12x'],
+              example: '12x'
             },
-            status: { 
+            amount: { 
               type: 'string', 
-              enum: ['active', 'inactive', 'cancelled'],
-              default: 'active'
+              pattern: '^\\d+\\.\\d{2}$',
+              example: '119.99'
             },
-            startDate: { type: 'string', format: 'date-time' },
-            endDate: { type: 'string', format: 'date-time' }
+            payHash: { type: 'string', example: 'hash_abc123456' },
+            payStatus: { 
+              type: 'string', 
+              enum: ['pending', 'paid', 'failed', 'expired'],
+              default: 'pending'
+            },
+            payDate: { type: 'string', format: 'date-time' },
+            payLink: { type: 'string', example: 'https://payment.example.com/pay/123' },
+            payExpiration: { type: 'string', format: 'date-time' },
+            planExpirationDate: { type: 'string', format: 'date-time' },
+            isActive: { type: 'boolean', default: true }
           }
         },
         SupportTicket: {
@@ -334,22 +369,6 @@ const options = {
             isRevoked: { type: 'boolean', example: false },
             createdAt: { type: 'string', format: 'date-time' },
             revokedAt: { type: 'string', format: 'date-time', nullable: true }
-          }
-        },
-        CreateAccounting: {
-          type: 'object',
-          required: ['entrepreneurId', 'category', 'description', 'date', 'type', 'amount'],
-          properties: {
-            entrepreneurId: { type: 'integer', example: 1 },
-            category: { type: 'string', example: 'Sales Revenue' },
-            description: { type: 'string', example: 'Monthly subscription payment' },
-            date: { type: 'string', format: 'date-time' },
-            type: { 
-              type: 'string', 
-              enum: ['receives', 'expenses'],
-              example: 'receives'
-            },
-            amount: { type: 'string', example: '1299.99' }
           }
         },
         AuthRequest: {
