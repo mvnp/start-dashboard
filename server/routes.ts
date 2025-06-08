@@ -1619,6 +1619,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/customer-plans/{id}:
+   *   put:
+   *     tags: [Customer Plans]
+   *     summary: Update customer plan
+   *     description: Update an existing customer subscription plan. Users can only update their own plans unless they have admin privileges.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Customer plan ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateCustomerPlan'
+   *           examples:
+   *             upgradePlan:
+   *               summary: Upgrade to higher tier
+   *               value:
+   *                 priceTableId: 3
+   *                 status: "active"
+   *                 endDate: "2025-01-15T00:00:00Z"
+   *             cancelSubscription:
+   *               summary: Cancel subscription
+   *               value:
+   *                 status: "cancelled"
+   *                 endDate: "2024-01-31T23:59:59Z"
+   *             applyDiscount:
+   *               summary: Apply discount to existing plan
+   *               value:
+   *                 customPrice: 150.00
+   *                 discountPercentage: 25
+   *     responses:
+   *       200:
+   *         description: Customer plan updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/CustomerPlan'
+   *       400:
+   *         description: Invalid data
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Access denied - can only update own plans
+   *       404:
+   *         description: Customer plan not found
+   *       500:
+   *         description: Internal server error
+   */
   app.put("/api/customer-plans/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1653,6 +1710,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/customer-plans/{id}:
+   *   delete:
+   *     tags: [Customer Plans]
+   *     summary: Delete customer plan
+   *     description: Cancel and delete a customer subscription plan. Users can only delete their own plans unless they have admin privileges.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Customer plan ID
+   *     responses:
+   *       200:
+   *         description: Customer plan deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Customer plan deleted successfully"
+   *                 refundAmount:
+   *                   type: number
+   *                   example: 45.50
+   *                   description: "Prorated refund amount if applicable"
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Access denied - can only delete own plans
+   *       404:
+   *         description: Customer plan not found
+   *       500:
+   *         description: Internal server error
+   */
   app.delete("/api/customer-plans/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

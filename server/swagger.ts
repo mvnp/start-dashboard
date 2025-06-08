@@ -423,6 +423,225 @@ const options = {
             error: { type: 'string', example: 'Error message' },
             details: { type: 'string', example: 'Detailed error information' }
           }
+        },
+        PriceTable: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              description: "Unique identifier for the price table",
+              example: 1
+            },
+            name: {
+              type: "string",
+              description: "Name of the pricing plan",
+              example: "Professional Plan"
+            },
+            description: {
+              type: "string",
+              description: "Detailed description of the plan",
+              example: "Perfect for growing businesses with advanced features"
+            },
+            price: {
+              type: "number",
+              format: "decimal",
+              description: "Plan price",
+              example: 79.99
+            },
+            billingPeriod: {
+              type: "string",
+              enum: ["monthly", "yearly", "one-time"],
+              description: "Billing frequency",
+              example: "monthly"
+            },
+            features: {
+              type: "array",
+              items: {
+                type: "string"
+              },
+              description: "List of features included in the plan",
+              example: ["Up to 10,000 messages", "Priority support", "Custom templates"]
+            },
+            maxUsers: {
+              type: "integer",
+              description: "Maximum number of users allowed",
+              example: 25
+            },
+            maxMessages: {
+              type: "integer",
+              description: "Maximum messages per billing period (-1 for unlimited)",
+              example: 10000
+            },
+            isActive: {
+              type: "boolean",
+              description: "Whether the plan is currently available for selection",
+              example: true
+            },
+            displayOrder: {
+              type: "integer",
+              description: "Order for displaying plans",
+              example: 2
+            }
+          }
+        },
+        CreatePriceTable: {
+          type: "object",
+          required: ["name", "description", "price", "billingPeriod", "features", "maxUsers", "maxMessages"],
+          properties: {
+            name: {
+              type: "string",
+              description: "Name of the pricing plan",
+              example: "Professional Plan"
+            },
+            description: {
+              type: "string",
+              description: "Detailed description of the plan",
+              example: "Perfect for growing businesses with advanced features"
+            },
+            price: {
+              type: "number",
+              format: "decimal",
+              description: "Plan price",
+              example: 79.99
+            },
+            billingPeriod: {
+              type: "string",
+              enum: ["monthly", "yearly", "one-time"],
+              description: "Billing frequency",
+              example: "monthly"
+            },
+            features: {
+              type: "array",
+              items: {
+                type: "string"
+              },
+              description: "List of features included in the plan",
+              example: ["Up to 10,000 messages", "Priority support", "Custom templates"]
+            },
+            maxUsers: {
+              type: "integer",
+              description: "Maximum number of users allowed",
+              example: 25
+            },
+            maxMessages: {
+              type: "integer",
+              description: "Maximum messages per billing period (-1 for unlimited)",
+              example: 10000
+            },
+            isActive: {
+              type: "boolean",
+              description: "Whether the plan is currently available for selection",
+              example: true,
+              default: true
+            },
+            displayOrder: {
+              type: "integer",
+              description: "Order for displaying plans",
+              example: 2,
+              default: 0
+            }
+          }
+        },
+        CustomerPlan: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              description: "Unique identifier for the customer plan",
+              example: 1
+            },
+            userId: {
+              type: "integer",
+              description: "ID of the subscribed user",
+              example: 3
+            },
+            priceTableId: {
+              type: "integer",
+              description: "ID of the associated price table",
+              example: 2
+            },
+            status: {
+              type: "string",
+              enum: ["active", "inactive", "expired", "cancelled"],
+              description: "Current status of the subscription",
+              example: "active"
+            },
+            startDate: {
+              type: "string",
+              format: "date-time",
+              description: "Subscription start date",
+              example: "2024-01-15T00:00:00Z"
+            },
+            endDate: {
+              type: "string",
+              format: "date-time",
+              description: "Subscription end date",
+              example: "2024-02-15T00:00:00Z"
+            },
+            customPrice: {
+              type: "number",
+              format: "decimal",
+              nullable: true,
+              description: "Custom pricing override (null for standard pricing)",
+              example: 150.00
+            },
+            discountPercentage: {
+              type: "number",
+              format: "decimal",
+              nullable: true,
+              description: "Discount percentage applied",
+              example: 25.0
+            }
+          }
+        },
+        CreateCustomerPlan: {
+          type: "object",
+          required: ["userId", "priceTableId", "status", "startDate", "endDate"],
+          properties: {
+            userId: {
+              type: "integer",
+              description: "ID of the user to subscribe",
+              example: 3
+            },
+            priceTableId: {
+              type: "integer",
+              description: "ID of the price table to subscribe to",
+              example: 2
+            },
+            status: {
+              type: "string",
+              enum: ["active", "inactive", "expired", "cancelled"],
+              description: "Initial subscription status",
+              example: "active",
+              default: "active"
+            },
+            startDate: {
+              type: "string",
+              format: "date-time",
+              description: "Subscription start date",
+              example: "2024-01-15T00:00:00Z"
+            },
+            endDate: {
+              type: "string",
+              format: "date-time",
+              description: "Subscription end date",
+              example: "2024-02-15T00:00:00Z"
+            },
+            customPrice: {
+              type: "number",
+              format: "decimal",
+              nullable: true,
+              description: "Custom pricing override (null for standard pricing)",
+              example: null
+            },
+            discountPercentage: {
+              type: "number",
+              format: "decimal",
+              nullable: true,
+              description: "Discount percentage to apply",
+              example: null
+            }
+          }
         }
       }
     },
