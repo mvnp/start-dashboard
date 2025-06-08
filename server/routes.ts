@@ -711,7 +711,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/support-tickets/:id", async (req, res) => {
     try {
       const ticketId = parseInt(req.params.id);
-      const updateData = req.body;
+      const updateData = { ...req.body };
+      
+      // Convert string dates to Date objects
+      if (updateData.resolvedAt) {
+        updateData.resolvedAt = new Date(updateData.resolvedAt);
+      }
       
       const updatedTicket = await storage.updateSupportTicket(ticketId, updateData);
       

@@ -17,6 +17,7 @@ import CustomerPlans from "@/pages/CustomerPlans";
 import PriceTables from "@/pages/PriceTables";
 import PublicPricing from "@/pages/PublicPricing";
 import Support from "@/pages/Support";
+import SupportTickets from "@/pages/SupportTickets";
 
 import MockDataGenerator from "@/pages/MockDataGenerator";
 import NotFound from "@/pages/not-found";
@@ -46,6 +47,7 @@ function Router() {
           <Route path="/price-tables" component={PriceTables} />
           <Route path="/public-pricing" component={PublicPricing} />
           <Route path="/support" component={Support} />
+          <Route path="/support-tickets" component={SupportTickets} />
 
           <Route path="/mock-data" component={MockDataGenerator} />
         </>
