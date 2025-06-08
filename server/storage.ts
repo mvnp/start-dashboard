@@ -1,4 +1,4 @@
-import { users, paymentGateways, collaborators, whatsappInstances, priceTables, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable } from "@shared/schema";
+import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -39,6 +39,15 @@ export interface IStorage {
   createPriceTable(priceTable: InsertPriceTable): Promise<PriceTable>;
   updatePriceTable(id: number, priceTable: UpdatePriceTable): Promise<PriceTable | undefined>;
   deletePriceTable(id: number): Promise<boolean>;
+
+  // Customer Plan operations
+  getCustomerPlan(id: number): Promise<CustomerPlan | undefined>;
+  getAllCustomerPlans(entrepreneurId?: number): Promise<CustomerPlanWithDetails[]>;
+  getCustomerPlansByCustomer(customerId: number): Promise<CustomerPlanWithDetails[]>;
+  getCustomerPlansByEntrepreneur(entrepreneurId: number): Promise<CustomerPlanWithDetails[]>;
+  createCustomerPlan(plan: InsertCustomerPlan): Promise<CustomerPlan>;
+  updateCustomerPlan(id: number, plan: UpdateCustomerPlan): Promise<CustomerPlan | undefined>;
+  deleteCustomerPlan(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -220,6 +229,125 @@ export class DatabaseStorage implements IStorage {
 
   async deletePriceTable(id: number): Promise<boolean> {
     const result = await db.delete(priceTables).where(eq(priceTables.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Customer Plan operations
+  async getCustomerPlan(id: number): Promise<CustomerPlan | undefined> {
+    const [plan] = await db.select().from(customerPlans).where(eq(customerPlans.id, id));
+    return plan || undefined;
+  }
+
+  async getAllCustomerPlans(entrepreneurId?: number): Promise<CustomerPlanWithDetails[]> {
+    // Get all customer plans first
+    let baseQuery = db.select().from(customerPlans);
+    
+    if (entrepreneurId) {
+      baseQuery = baseQuery.where(eq(customerPlans.entrepreneurId, entrepreneurId));
+    }
+
+    const plans = await baseQuery.orderBy(customerPlans.createdAt);
+    
+    // Fetch related data for each plan
+    const plansWithDetails: CustomerPlanWithDetails[] = [];
+    
+    for (const plan of plans) {
+      const [customer] = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      }).from(users).where(eq(users.id, plan.customerId));
+
+      const [entrepreneur] = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      }).from(users).where(eq(users.id, plan.entrepreneurId));
+
+      const [priceTable] = await db.select({
+        id: priceTables.id,
+        title: priceTables.title,
+        subtitle: priceTables.subtitle,
+        currentPrice3x: priceTables.currentPrice3x,
+        currentPrice12x: priceTables.currentPrice12x,
+        months: priceTables.months,
+      }).from(priceTables).where(eq(priceTables.id, plan.priceTableId));
+
+      plansWithDetails.push({
+        ...plan,
+        customer: customer || { id: 0, name: '', email: '' },
+        entrepreneur: entrepreneur || { id: 0, name: '', email: '' },
+        priceTable: priceTable || { id: 0, title: '', subtitle: '', currentPrice3x: '', currentPrice12x: '', months: 0 }
+      });
+    }
+
+    return plansWithDetails;
+  }
+
+  async getCustomerPlansByCustomer(customerId: number): Promise<CustomerPlanWithDetails[]> {
+    const plans = await db.select()
+      .from(customerPlans)
+      .where(eq(customerPlans.customerId, customerId))
+      .orderBy(customerPlans.createdAt);
+
+    const plansWithDetails: CustomerPlanWithDetails[] = [];
+    
+    for (const plan of plans) {
+      const [customer] = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      }).from(users).where(eq(users.id, plan.customerId));
+
+      const [entrepreneur] = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      }).from(users).where(eq(users.id, plan.entrepreneurId));
+
+      const [priceTable] = await db.select({
+        id: priceTables.id,
+        title: priceTables.title,
+        subtitle: priceTables.subtitle,
+        currentPrice3x: priceTables.currentPrice3x,
+        currentPrice12x: priceTables.currentPrice12x,
+        months: priceTables.months,
+      }).from(priceTables).where(eq(priceTables.id, plan.priceTableId));
+
+      plansWithDetails.push({
+        ...plan,
+        customer: customer || { id: 0, name: '', email: '' },
+        entrepreneur: entrepreneur || { id: 0, name: '', email: '' },
+        priceTable: priceTable || { id: 0, title: '', subtitle: '', currentPrice3x: '', currentPrice12x: '', months: 0 }
+      });
+    }
+
+    return plansWithDetails;
+  }
+
+  async getCustomerPlansByEntrepreneur(entrepreneurId: number): Promise<CustomerPlanWithDetails[]> {
+    return this.getAllCustomerPlans(entrepreneurId);
+  }
+
+  async createCustomerPlan(insertPlan: InsertCustomerPlan): Promise<CustomerPlan> {
+    const [plan] = await db
+      .insert(customerPlans)
+      .values(insertPlan)
+      .returning();
+    return plan;
+  }
+
+  async updateCustomerPlan(id: number, plan: UpdateCustomerPlan): Promise<CustomerPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(customerPlans)
+      .set({ ...plan, updatedAt: new Date() })
+      .where(eq(customerPlans.id, id))
+      .returning();
+    return updatedPlan || undefined;
+  }
+
+  async deleteCustomerPlan(id: number): Promise<boolean> {
+    const result = await db.delete(customerPlans).where(eq(customerPlans.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

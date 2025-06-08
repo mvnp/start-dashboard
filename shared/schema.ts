@@ -181,3 +181,63 @@ export const updatePriceTableSchema = createInsertSchema(priceTables).omit({
 export type InsertPriceTable = z.infer<typeof insertPriceTableSchema>;
 export type UpdatePriceTable = z.infer<typeof updatePriceTableSchema>;
 export type PriceTable = typeof priceTables.$inferSelect;
+
+// Customer Plans
+export const customerPlans = pgTable("customer_plans", {
+  id: serial("id").primaryKey(),
+  customerId: integer("customer_id").references(() => users.id).notNull(),
+  entrepreneurId: integer("entrepreneur_id").references(() => users.id).notNull(),
+  priceTableId: integer("price_table_id").references(() => priceTables.id).notNull(),
+  planType: varchar("plan_type", { length: 10 }).notNull(), // '3x' or '12x'
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  payHash: varchar("pay_hash", { length: 255 }),
+  payStatus: varchar("pay_status", { length: 50 }).notNull().default("pending"), // pending, paid, failed, expired
+  payDate: timestamp("pay_date"),
+  payLink: text("pay_link"),
+  payExpiration: timestamp("pay_expiration"),
+  planExpirationDate: timestamp("plan_expiration_date"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCustomerPlanSchema = createInsertSchema(customerPlans).pick({
+  customerId: true,
+  entrepreneurId: true,
+  priceTableId: true,
+  planType: true,
+  amount: true,
+  payHash: true,
+  payStatus: true,
+  payDate: true,
+  payLink: true,
+  payExpiration: true,
+  planExpirationDate: true,
+  isActive: true,
+});
+
+export const updateCustomerPlanSchema = createInsertSchema(customerPlans).pick({
+  customerId: true,
+  entrepreneurId: true,
+  priceTableId: true,
+  planType: true,
+  amount: true,
+  payHash: true,
+  payStatus: true,
+  payDate: true,
+  payLink: true,
+  payExpiration: true,
+  planExpirationDate: true,
+  isActive: true,
+}).partial();
+
+export type InsertCustomerPlan = z.infer<typeof insertCustomerPlanSchema>;
+export type UpdateCustomerPlan = z.infer<typeof updateCustomerPlanSchema>;
+export type CustomerPlan = typeof customerPlans.$inferSelect;
+
+// Customer Plan with joined data type
+export type CustomerPlanWithDetails = CustomerPlan & {
+  customer: Pick<User, 'id' | 'name' | 'email'>;
+  entrepreneur: Pick<User, 'id' | 'name' | 'email'>;
+  priceTable: Pick<PriceTable, 'id' | 'title' | 'subtitle' | 'currentPrice3x' | 'currentPrice12x' | 'months'>;
+};
