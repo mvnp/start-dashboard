@@ -2,8 +2,9 @@ import { createContext, useContext, useState } from 'react';
 import type { User, UserRole } from '@/lib/types';
 
 interface AuthContextType {
-  user: User;
+  user: User | null;
   setUserRole: (role: UserRole) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
