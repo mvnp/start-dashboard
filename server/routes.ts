@@ -1144,6 +1144,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Price Table routes - Super admin only for CRUD, public access for display
+  /**
+   * @swagger
+   * /api/price-tables:
+   *   get:
+   *     tags: [Price Tables]
+   *     summary: Get all price tables
+   *     description: Retrieve all available pricing plans and tables. Public access for customers to view pricing options.
+   *     parameters:
+   *       - in: query
+   *         name: isActive
+   *         schema:
+   *           type: boolean
+   *         description: Filter by active status
+   *       - in: query
+   *         name: displayOrder
+   *         schema:
+   *           type: integer
+   *         description: Sort by display order
+   *     responses:
+   *       200:
+   *         description: List of price tables
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/PriceTable'
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/price-tables", async (req, res) => {
     try {
       const priceTables = await storage.getAllPriceTables();
@@ -1154,6 +1184,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/price-tables/{id}:
+   *   get:
+   *     tags: [Price Tables]
+   *     summary: Get price table by ID
+   *     description: Retrieve a specific pricing plan by its ID. Public access for customers to view specific plan details.
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Price table ID
+   *     responses:
+   *       200:
+   *         description: Price table details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PriceTable'
+   *       404:
+   *         description: Price table not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/price-tables/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1181,6 +1237,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
+  /**
+   * @swagger
+   * /api/price-tables:
+   *   post:
+   *     tags: [Price Tables]
+   *     summary: Create new price table
+   *     description: Create a new pricing plan. Requires super admin authentication.
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreatePriceTable'
+   *           examples:
+   *             basicPlan:
+   *               summary: Basic Plan
+   *               value:
+   *                 name: "Basic Plan"
+   *                 description: "Perfect for small businesses getting started"
+   *                 price: 29.99
+   *                 billingPeriod: "monthly"
+   *                 features: ["Up to 1,000 messages", "Basic support", "Standard templates"]
+   *                 maxUsers: 5
+   *                 maxMessages: 1000
+   *                 isActive: true
+   *                 displayOrder: 1
+   *             enterprisePlan:
+   *               summary: Enterprise Plan
+   *               value:
+   *                 name: "Enterprise"
+   *                 description: "Advanced features for large organizations"
+   *                 price: 199.99
+   *                 billingPeriod: "monthly"
+   *                 features: ["Unlimited messages", "Priority support", "Custom integrations", "Advanced analytics"]
+   *                 maxUsers: 100
+   *                 maxMessages: -1
+   *                 isActive: true
+   *                 displayOrder: 3
+   *     responses:
+   *       201:
+   *         description: Price table created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PriceTable'
+   *       400:
+   *         description: Invalid data
+   *       403:
+   *         description: Access denied - Super admin required
+   *       500:
+   *         description: Internal server error
+   */
   app.post("/api/price-tables", requireSuperAdmin, async (req, res) => {
     try {
       const validatedData = insertPriceTableSchema.parse(req.body);
@@ -1195,6 +1305,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/price-tables/{id}:
+   *   put:
+   *     tags: [Price Tables]
+   *     summary: Update price table
+   *     description: Update an existing pricing plan. Requires super admin authentication.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Price table ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreatePriceTable'
+   *           examples:
+   *             updatePricing:
+   *               summary: Update pricing and features
+   *               value:
+   *                 name: "Professional Plan"
+   *                 description: "Enhanced features for growing businesses"
+   *                 price: 79.99
+   *                 billingPeriod: "monthly"
+   *                 features: ["Up to 10,000 messages", "Priority support", "Custom templates", "Analytics dashboard"]
+   *                 maxUsers: 25
+   *                 maxMessages: 10000
+   *                 isActive: true
+   *                 displayOrder: 2
+   *             deactivatePlan:
+   *               summary: Deactivate plan
+   *               value:
+   *                 isActive: false
+   *     responses:
+   *       200:
+   *         description: Price table updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PriceTable'
+   *       400:
+   *         description: Invalid data
+   *       403:
+   *         description: Access denied - Super admin required
+   *       404:
+   *         description: Price table not found
+   *       500:
+   *         description: Internal server error
+   */
   app.put("/api/price-tables/:id", requireSuperAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1215,6 +1380,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/price-tables/{id}:
+   *   delete:
+   *     tags: [Price Tables]
+   *     summary: Delete price table
+   *     description: Delete a pricing plan. Requires super admin authentication. Cannot delete plans with active customer subscriptions.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Price table ID
+   *     responses:
+   *       200:
+   *         description: Price table deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Price table deleted successfully"
+   *       403:
+   *         description: Access denied - Super admin required
+   *       404:
+   *         description: Price table not found
+   *       409:
+   *         description: Cannot delete - price table has active subscriptions
+   *       500:
+   *         description: Internal server error
+   */
   app.delete("/api/price-tables/:id", requireSuperAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1230,6 +1431,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer Plans routes
+  /**
+   * @swagger
+   * /api/customer-plans:
+   *   get:
+   *     tags: [Customer Plans]
+   *     summary: Get customer plans
+   *     description: Retrieve customer subscription plans. Returns user's own plans for regular users, all plans for admins.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: userId
+   *         schema:
+   *           type: integer
+   *         description: Filter by user ID (admin only)
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *           enum: [active, inactive, expired, cancelled]
+   *         description: Filter by subscription status
+   *       - in: query
+   *         name: priceTableId
+   *         schema:
+   *           type: integer
+   *         description: Filter by price table ID
+   *     responses:
+   *       200:
+   *         description: List of customer plans
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/CustomerPlan'
+   *       401:
+   *         description: Authentication required
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/customer-plans", requireAuth, async (req, res) => {
     try {
       const userId = req.userId!;
@@ -1255,6 +1496,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/customer-plans/{id}:
+   *   get:
+   *     tags: [Customer Plans]
+   *     summary: Get customer plan by ID
+   *     description: Retrieve a specific customer subscription plan. Users can only access their own plans unless they have admin privileges.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Customer plan ID
+   *     responses:
+   *       200:
+   *         description: Customer plan details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/CustomerPlan'
+   *       401:
+   *         description: Authentication required
+   *       403:
+   *         description: Access denied - can only view own plans
+   *       404:
+   *         description: Customer plan not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/customer-plans/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1280,6 +1553,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/customer-plans:
+   *   post:
+   *     tags: [Customer Plans]
+   *     summary: Create customer plan subscription
+   *     description: Subscribe a user to a pricing plan. Creates a new customer subscription with specified plan details.
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateCustomerPlan'
+   *           examples:
+   *             basicSubscription:
+   *               summary: Basic Plan Subscription
+   *               value:
+   *                 userId: 3
+   *                 priceTableId: 1
+   *                 status: "active"
+   *                 startDate: "2024-01-15T00:00:00Z"
+   *                 endDate: "2024-02-15T00:00:00Z"
+   *                 customPrice: null
+   *                 discountPercentage: null
+   *             enterpriseWithDiscount:
+   *               summary: Enterprise Plan with Discount
+   *               value:
+   *                 userId: 5
+   *                 priceTableId: 3
+   *                 status: "active"
+   *                 startDate: "2024-01-15T00:00:00Z"
+   *                 endDate: "2025-01-15T00:00:00Z"
+   *                 customPrice: 1800.00
+   *                 discountPercentage: 25
+   *     responses:
+   *       201:
+   *         description: Customer plan created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/CustomerPlan'
+   *       400:
+   *         description: Invalid data
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: Price table not found
+   *       500:
+   *         description: Internal server error
+   */
   app.post("/api/customer-plans", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCustomerPlanSchema.parse(req.body);
