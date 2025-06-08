@@ -17,6 +17,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
+    { icon: 'HeadphonesIcon', label: 'Support', href: '/support' },
 
     { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },
@@ -34,6 +35,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
+    { icon: 'HeadphonesIcon', label: 'Support', href: '/support' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'DollarSign', label: 'Revenue' },
     { icon: 'FileIcon', label: 'Projects' },
@@ -44,6 +46,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'CheckSquare', label: 'My Tasks' },
     { icon: 'FileIcon', label: 'Projects' },
     { icon: 'MessageSquare', label: 'Messages' },
+    { icon: 'Headphones', label: 'Support', href: '/support' },
     { icon: 'Calendar', label: 'Calendar' },
     { icon: 'Clock', label: 'Time Tracking' },
     { icon: 'FileText', label: 'Documents' }
@@ -54,7 +57,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'Heart', label: 'Favorites' },
     { icon: 'User', label: 'Profile' },
     { icon: 'CreditCard', label: 'Billing' },
-    { icon: 'Headphones', label: 'Support' },
+    { icon: 'Headphones', label: 'Support', href: '/support' },
     { icon: 'Star', label: 'Reviews' }
   ]
 };
