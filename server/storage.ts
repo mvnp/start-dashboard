@@ -1,4 +1,4 @@
-import { users, paymentGateways, collaborators, whatsappInstances, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance } from "@shared/schema";
+import { users, paymentGateways, collaborators, whatsappInstances, priceTables, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -32,6 +32,13 @@ export interface IStorage {
   createWhatsappInstance(instance: InsertWhatsappInstance & { createdBy: number; entrepreneurId: number }): Promise<WhatsappInstance>;
   updateWhatsappInstance(id: number, instance: UpdateWhatsappInstance): Promise<WhatsappInstance | undefined>;
   deleteWhatsappInstance(id: number): Promise<boolean>;
+
+  // Price Table operations  
+  getPriceTable(id: number): Promise<PriceTable | undefined>;
+  getAllPriceTables(): Promise<PriceTable[]>;
+  createPriceTable(priceTable: InsertPriceTable): Promise<PriceTable>;
+  updatePriceTable(id: number, priceTable: UpdatePriceTable): Promise<PriceTable | undefined>;
+  deletePriceTable(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -181,6 +188,38 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWhatsappInstance(id: number): Promise<boolean> {
     const result = await db.delete(whatsappInstances).where(eq(whatsappInstances.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Price Table operations
+  async getPriceTable(id: number): Promise<PriceTable | undefined> {
+    const [priceTable] = await db.select().from(priceTables).where(eq(priceTables.id, id));
+    return priceTable || undefined;
+  }
+
+  async getAllPriceTables(): Promise<PriceTable[]> {
+    return await db.select().from(priceTables).orderBy(priceTables.displayOrder, priceTables.id);
+  }
+
+  async createPriceTable(insertPriceTable: InsertPriceTable): Promise<PriceTable> {
+    const [priceTable] = await db
+      .insert(priceTables)
+      .values(insertPriceTable)
+      .returning();
+    return priceTable;
+  }
+
+  async updatePriceTable(id: number, priceTable: UpdatePriceTable): Promise<PriceTable | undefined> {
+    const [updatedPriceTable] = await db
+      .update(priceTables)
+      .set({ ...priceTable, updatedAt: new Date() })
+      .where(eq(priceTables.id, id))
+      .returning();
+    return updatedPriceTable || undefined;
+  }
+
+  async deletePriceTable(id: number): Promise<boolean> {
+    const result = await db.delete(priceTables).where(eq(priceTables.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, varchar, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, varchar, boolean, integer, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -145,3 +145,36 @@ export const updateWhatsappInstanceSchema = createInsertSchema(whatsappInstances
 export type InsertWhatsappInstance = z.infer<typeof insertWhatsappInstanceSchema>;
 export type UpdateWhatsappInstance = z.infer<typeof updateWhatsappInstanceSchema>;
 export type WhatsappInstance = typeof whatsappInstances.$inferSelect;
+
+// Price Tables
+export const priceTables = pgTable("price_tables", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  subtitle: varchar("subtitle", { length: 500 }),
+  advantages: text("advantages").array().notNull().default([]),
+  oldPrice: decimal("old_price", { precision: 10, scale: 2 }),
+  currentPrice: decimal("current_price", { precision: 10, scale: 2 }).notNull(),
+  image1: varchar("image1", { length: 500 }),
+  image2: varchar("image2", { length: 500 }),
+  buyLink: varchar("buy_link", { length: 500 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPriceTableSchema = createInsertSchema(priceTables).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updatePriceTableSchema = createInsertSchema(priceTables).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
+
+export type InsertPriceTable = z.infer<typeof insertPriceTableSchema>;
+export type UpdatePriceTable = z.infer<typeof updatePriceTableSchema>;
+export type PriceTable = typeof priceTables.$inferSelect;
