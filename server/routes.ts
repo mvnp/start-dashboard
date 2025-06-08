@@ -811,6 +811,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // WhatsApp Instances routes
+  /**
+   * @swagger
+   * /api/whatsapp-instances:
+   *   get:
+   *     tags: [WhatsApp Instances]
+   *     summary: Get all WhatsApp instances
+   *     description: Retrieve WhatsApp instances based on user role and permissions. Super-admins see all instances, entrepreneurs see their own.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: isActive
+   *         schema:
+   *           type: boolean
+   *         description: Filter by active status
+   *       - in: query
+   *         name: entrepreneurId
+   *         schema:
+   *           type: integer
+   *         description: Filter by entrepreneur ID (super-admin only)
+   *     responses:
+   *       200:
+   *         description: List of WhatsApp instances
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/WhatsappInstance'
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: User not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/whatsapp-instances", requireAuth, async (req: any, res) => {
     try {
       const userId = req.userId;
@@ -836,6 +872,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/whatsapp-instances/{id}:
+   *   get:
+   *     tags: [WhatsApp Instances]
+   *     summary: Get WhatsApp instance by ID
+   *     description: Retrieve a specific WhatsApp instance by its ID
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: WhatsApp instance ID
+   *     responses:
+   *       200:
+   *         description: WhatsApp instance details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/WhatsappInstance'
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: WhatsApp instance not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/whatsapp-instances/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -850,6 +916,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/whatsapp-instances:
+   *   post:
+   *     tags: [WhatsApp Instances]
+   *     summary: Create a new WhatsApp instance
+   *     description: Create a new WhatsApp instance configuration for messaging automation
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateWhatsappInstance'
+   *           examples:
+   *             businessInstance:
+   *               summary: Business WhatsApp Instance
+   *               value:
+   *                 name: "Customer Support WhatsApp"
+   *                 instanceNumber: "wa_business_001"
+   *                 apiUrl: "https://api.whatsapp.business.com/v1/instance/001"
+   *                 isActive: true
+   *             marketingInstance:
+   *               summary: Marketing WhatsApp Instance
+   *               value:
+   *                 name: "Marketing Campaigns"
+   *                 instanceNumber: "wa_marketing_002"
+   *                 apiUrl: "https://api.whatsapp.business.com/v1/instance/002"
+   *                 isActive: true
+   *     responses:
+   *       201:
+   *         description: WhatsApp instance created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/WhatsappInstance'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: User not found
+   *       500:
+   *         description: Internal server error
+   */
   app.post("/api/whatsapp-instances", requireAuth, async (req: any, res) => {
     try {
       const userId = req.userId;
@@ -879,6 +1002,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/whatsapp-instances/{id}:
+   *   put:
+   *     tags: [WhatsApp Instances]
+   *     summary: Update WhatsApp instance
+   *     description: Update an existing WhatsApp instance configuration
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: WhatsApp instance ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 example: "Updated Customer Support WhatsApp"
+   *               instanceNumber:
+   *                 type: string
+   *                 example: "wa_updated_001"
+   *               apiUrl:
+   *                 type: string
+   *                 example: "https://api.whatsapp.business.com/v1/instance/updated001"
+   *               isActive:
+   *                 type: boolean
+   *                 example: true
+   *     responses:
+   *       200:
+   *         description: WhatsApp instance updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/WhatsappInstance'
+   *       400:
+   *         description: Invalid data
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: WhatsApp instance not found
+   *       500:
+   *         description: Internal server error
+   */
   app.put("/api/whatsapp-instances/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -899,6 +1073,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/whatsapp-instances/{id}:
+   *   delete:
+   *     tags: [WhatsApp Instances]
+   *     summary: Delete WhatsApp instance
+   *     description: Delete a WhatsApp instance by ID. This action is permanent and will stop all messaging automation.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: WhatsApp instance ID
+   *     responses:
+   *       204:
+   *         description: WhatsApp instance deleted successfully
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: WhatsApp instance not found
+   *       500:
+   *         description: Internal server error
+   */
   app.delete("/api/whatsapp-instances/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1158,6 +1358,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Support tickets endpoint
+  /**
+   * @swagger
+   * /api/support-tickets:
+   *   post:
+   *     tags: [Support Tickets]
+   *     summary: Create a new support ticket
+   *     description: Submit a new customer support ticket with contact information and issue details
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateSupportTicket'
+   *           examples:
+   *             technicalIssue:
+   *               summary: Technical Issue
+   *               value:
+   *                 name: "John Customer"
+   *                 email: "john@example.com"
+   *                 phone: "+1234567890"
+   *                 subject: "Cannot access my dashboard"
+   *                 category: "technical"
+   *                 priority: "high"
+   *                 message: "I'm unable to login to my dashboard. Getting error 500 when trying to access the main page."
+   *             billingInquiry:
+   *               summary: Billing Inquiry
+   *               value:
+   *                 name: "Jane Smith"
+   *                 email: "jane@company.com"
+   *                 phone: "+1987654321"
+   *                 subject: "Question about invoice charges"
+   *                 category: "billing"
+   *                 priority: "medium"
+   *                 message: "I have a question about the charges on my latest invoice. Could you please clarify the additional fees?"
+   *             featureRequest:
+   *               summary: Feature Request
+   *               value:
+   *                 name: "Bob Developer"
+   *                 email: "bob@startup.com"
+   *                 subject: "API rate limit increase request"
+   *                 category: "feature"
+   *                 priority: "low"
+   *                 message: "Could you please consider increasing the API rate limits for enterprise customers?"
+   *     responses:
+   *       201:
+   *         description: Support ticket created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 ticketId:
+   *                   type: string
+   *                   example: "TKT-2024-001"
+   *                 message:
+   *                   type: string
+   *                   example: "Support ticket submitted successfully"
+   *                 estimatedResponse:
+   *                   type: string
+   *                   example: "24 hours"
+   *                 ticket:
+   *                   $ref: '#/components/schemas/SupportTicket'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       500:
+   *         description: Internal server error
+   */
   app.post("/api/support-tickets", async (req, res) => {
     try {
       const validatedData = insertSupportTicketSchema.parse(req.body);
@@ -1181,6 +1462,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/support-tickets:
+   *   get:
+   *     tags: [Support Tickets]
+   *     summary: Get all support tickets
+   *     description: Retrieve all support tickets in the system with optional filtering by status, category, or priority
+   *     parameters:
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *           enum: [open, in_progress, resolved, closed]
+   *         description: Filter by ticket status
+   *       - in: query
+   *         name: category
+   *         schema:
+   *           type: string
+   *           enum: [technical, billing, feature, bug, general]
+   *         description: Filter by ticket category
+   *       - in: query
+   *         name: priority
+   *         schema:
+   *           type: string
+   *           enum: [low, medium, high, urgent]
+   *         description: Filter by ticket priority
+   *       - in: query
+   *         name: assignedTo
+   *         schema:
+   *           type: integer
+   *         description: Filter by assigned user ID
+   *     responses:
+   *       200:
+   *         description: List of support tickets
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/SupportTicket'
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/support-tickets", async (req, res) => {
     try {
       const tickets = await storage.getAllSupportTickets();
