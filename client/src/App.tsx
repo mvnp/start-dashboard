@@ -18,6 +18,7 @@ import PriceTables from "@/pages/PriceTables";
 import PublicPricing from "@/pages/PublicPricing";
 import Support from "@/pages/Support";
 import SupportTickets from "@/pages/SupportTickets";
+import Accounting from "@/pages/Accounting";
 
 import MockDataGenerator from "@/pages/MockDataGenerator";
 import NotFound from "@/pages/not-found";
