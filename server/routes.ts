@@ -1515,6 +1515,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/support-tickets/{id}:
+   *   patch:
+   *     tags: [Support Tickets]
+   *     summary: Update support ticket
+   *     description: Update a support ticket status, assignment, or resolution details. Typically used by support staff to manage tickets.
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Support ticket ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               status:
+   *                 type: string
+   *                 enum: [open, in_progress, resolved, closed]
+   *                 example: "in_progress"
+   *               assignedTo:
+   *                 type: integer
+   *                 example: 2
+   *               resolution:
+   *                 type: string
+   *                 example: "Issue resolved by updating user permissions and clearing cache"
+   *               resolvedAt:
+   *                 type: string
+   *                 format: date-time
+   *                 example: "2024-01-15T16:30:00Z"
+   *           examples:
+   *             assignTicket:
+   *               summary: Assign ticket to support agent
+   *               value:
+   *                 status: "in_progress"
+   *                 assignedTo: 2
+   *             resolveTicket:
+   *               summary: Resolve ticket with solution
+   *               value:
+   *                 status: "resolved"
+   *                 resolution: "Issue resolved by updating user permissions and clearing cache"
+   *                 resolvedAt: "2024-01-15T16:30:00Z"
+   *             closeTicket:
+   *               summary: Close resolved ticket
+   *               value:
+   *                 status: "closed"
+   *     responses:
+   *       200:
+   *         description: Support ticket updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/SupportTicket'
+   *       400:
+   *         description: Invalid data
+   *       404:
+   *         description: Support ticket not found
+   *       500:
+   *         description: Internal server error
+   */
   app.patch("/api/support-tickets/:id", async (req, res) => {
     try {
       const ticketId = parseInt(req.params.id);
