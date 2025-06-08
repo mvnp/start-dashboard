@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -185,7 +185,6 @@ function TicketResponseDialog({ ticket, open, onClose }: TicketResponseDialogPro
 export default function SupportTickets() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicketWithAssignee | null>(null);
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: tickets = [], isLoading } = useQuery<SupportTicketWithAssignee[]>({
     queryKey: ["/api/support-tickets"],
@@ -203,31 +202,18 @@ export default function SupportTickets() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-background">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex-1 flex flex-col">
-          <TopBar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="flex-1 overflow-auto">
-            <div className="p-6">
-              <div className="animate-pulse space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-32 bg-muted rounded-lg" />
-                ))}
-              </div>
-            </div>
-          </main>
+      <div className="p-6">
+        <div className="animate-pulse space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-32 bg-muted rounded-lg" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col">
-        <TopBar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 overflow-auto">
-          <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Support Tickets</h1>
@@ -394,16 +380,13 @@ export default function SupportTickets() {
         </div>
       )}
 
-            {selectedTicket && (
-              <TicketResponseDialog
-                ticket={selectedTicket}
-                open={responseDialogOpen}
-                onClose={handleCloseDialog}
-              />
-            )}
-          </div>
-        </main>
-      </div>
+      {selectedTicket && (
+        <TicketResponseDialog
+          ticket={selectedTicket}
+          open={responseDialogOpen}
+          onClose={handleCloseDialog}
+        />
+      )}
     </div>
   );
 }
