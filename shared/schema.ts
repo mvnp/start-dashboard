@@ -6,6 +6,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  password: text("password").notNull(),
   role: varchar("role", { length: 50 }).notNull().default("customer"),
   avatar: text("avatar"),
   entrepreneurId: integer("entrepreneur_id"), // References users.id, null for super-admin and entrepreneurs
@@ -16,6 +17,7 @@ export const users = pgTable("users", {
 export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
   email: true,
+  password: true,
   role: true,
   avatar: true,
   entrepreneurId: true,
@@ -24,6 +26,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const updateUserSchema = createInsertSchema(users).pick({
   name: true,
   email: true,
+  password: true,
   role: true,
   avatar: true,
   entrepreneurId: true,

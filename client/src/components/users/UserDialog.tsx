@@ -33,6 +33,7 @@ import type { User } from '@shared/schema';
 const userFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['super-admin', 'entrepreneur', 'collaborator', 'customer']),
   avatar: z.string().optional(),
 });
@@ -55,6 +56,7 @@ export function UserDialog({ open, onClose, user }: UserDialogProps) {
     defaultValues: {
       name: '',
       email: '',
+      password: '',
       role: 'customer',
       avatar: '',
     },
@@ -65,6 +67,7 @@ export function UserDialog({ open, onClose, user }: UserDialogProps) {
       form.reset({
         name: user.name,
         email: user.email,
+        password: '', // Always require password entry for security
         role: user.role as any,
         avatar: user.avatar || '',
       });
@@ -72,6 +75,7 @@ export function UserDialog({ open, onClose, user }: UserDialogProps) {
       form.reset({
         name: '',
         email: '',
+        password: '',
         role: 'customer',
         avatar: '',
       });
@@ -142,6 +146,24 @@ export function UserDialog({ open, onClose, user }: UserDialogProps) {
                     <Input
                       type="email"
                       placeholder="Enter email address"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={isEditing ? "Enter new password" : "Enter password"}
                       {...field}
                     />
                   </FormControl>
