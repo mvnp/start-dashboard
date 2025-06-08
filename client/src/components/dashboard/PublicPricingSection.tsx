@@ -147,21 +147,31 @@ export function PublicPricingSection() {
                 {/* Pricing */}
                 <div className="text-center space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      {priceTable.oldPrice && parseFloat(priceTable.oldPrice) > parseFloat(priceTable.currentPrice) && (
-                        <span className="text-xl text-gray-500 line-through">
-                          ${priceTable.oldPrice}
-                        </span>
-                      )}
-                      <span className={`text-4xl font-bold ${isPopular ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
-                        ${priceTable.currentPrice}
-                      </span>
-                    </div>
-                    {priceTable.oldPrice && parseFloat(priceTable.oldPrice) > parseFloat(priceTable.currentPrice) && (
-                      <Badge variant="destructive" className="text-xs">
-                        Save ${(parseFloat(priceTable.oldPrice) - parseFloat(priceTable.currentPrice)).toFixed(2)}
-                      </Badge>
-                    )}
+                    {(() => {
+                      const currentPrice = is12MonthPlan ? priceTable.currentPrice12x : priceTable.currentPrice3x;
+                      const oldPrice = is12MonthPlan ? priceTable.oldPrice12x : priceTable.oldPrice3x;
+                      const hasDiscount = oldPrice && parseFloat(oldPrice) > parseFloat(currentPrice);
+                      
+                      return (
+                        <>
+                          <div className="flex items-center justify-center gap-2">
+                            {hasDiscount && (
+                              <span className="text-xl text-gray-500 line-through">
+                                ${oldPrice}
+                              </span>
+                            )}
+                            <span className={`text-4xl font-bold ${isPopular ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
+                              ${currentPrice}
+                            </span>
+                          </div>
+                          {hasDiscount && (
+                            <Badge variant="destructive" className="text-xs">
+                              Save ${(parseFloat(oldPrice!) - parseFloat(currentPrice)).toFixed(2)}
+                            </Badge>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* Preview Image */}
