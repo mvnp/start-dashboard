@@ -122,9 +122,9 @@ export default function Pricing() {
                             ${priceTable.currentPrice}
                           </span>
                         </div>
-                        {priceTable.oldPrice && (
+                        {priceTable.oldPrice && parseFloat(priceTable.oldPrice) > parseFloat(priceTable.currentPrice) && (
                           <Badge variant="destructive" className="text-xs">
-                            Save ${priceTable.oldPrice - priceTable.currentPrice}
+                            Save ${(parseFloat(priceTable.oldPrice) - parseFloat(priceTable.currentPrice)).toFixed(2)}
                           </Badge>
                         )}
                       </div>
