@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, DollarSign, Package, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Copy, DollarSign, Package, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,20 @@ export function PriceTablesSection() {
 
   const handleEdit = (priceTable: PriceTable) => {
     setSelectedPriceTable(priceTable);
+    setIsDialogOpen(true);
+  };
+
+  const handleDuplicate = (priceTable: PriceTable) => {
+    // Create a duplicate with modified title and reset ID
+    const duplicatedTable = {
+      ...priceTable,
+      id: 0, // Reset ID for new entry
+      title: `${priceTable.title} (Copy)`,
+      isActive: false, // Set as inactive by default
+      createdAt: null,
+      updatedAt: null
+    };
+    setSelectedPriceTable(duplicatedTable);
     setIsDialogOpen(true);
   };
 
@@ -200,6 +214,15 @@ export function PriceTablesSection() {
                 >
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDuplicate(priceTable)}
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  title="Duplicate this price table"
+                >
+                  <Copy className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"
