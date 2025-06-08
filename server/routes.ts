@@ -6,6 +6,14 @@ import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updateP
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
+// Simple auth middleware for demo purposes
+const requireAuth = (req: any, res: any, next: any) => {
+  // For demo, we'll use a simple user ID from session or header
+  const userId = req.headers['x-user-id'] || '2'; // Default to Sarah Johnson for demo
+  req.userId = parseInt(userId);
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
@@ -320,9 +328,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // WhatsApp Instances routes
-  app.get("/api/whatsapp-instances", async (req: any, res) => {
+  app.get("/api/whatsapp-instances", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -345,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/whatsapp-instances/:id", async (req, res) => {
+  app.get("/api/whatsapp-instances/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const instance = await storage.getWhatsappInstance(id);
@@ -359,9 +367,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/whatsapp-instances", async (req: any, res) => {
+  app.post("/api/whatsapp-instances", requireAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
