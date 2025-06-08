@@ -558,11 +558,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let customerPlans;
       
-      // Super admin sees all plans, entrepreneurs see their plans, customers see their own plans
+      // Super admin sees all plans, customers see their own plans
       if (user.role === 'super-admin') {
         customerPlans = await storage.getAllCustomerPlans();
-      } else if (user.role === 'entrepreneur') {
-        customerPlans = await storage.getCustomerPlansByEntrepreneur(user.id);
       } else {
         customerPlans = await storage.getCustomerPlansByCustomer(user.id);
       }
@@ -588,8 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       
       if (user?.role !== 'super-admin' && 
-          plan.customerId !== userId && 
-          plan.entrepreneurId !== userId) {
+          plan.customerId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       

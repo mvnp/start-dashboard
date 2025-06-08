@@ -181,11 +181,7 @@ export default function CustomerPlans() {
                       <p className="text-sm">{plan.customer.name}</p>
                       <p className="text-xs text-muted-foreground">{plan.customer.email}</p>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Entrepreneur</p>
-                      <p className="text-sm">{plan.entrepreneur.name}</p>
-                      <p className="text-xs text-muted-foreground">{plan.entrepreneur.email}</p>
-                    </div>
+
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Amount</p>
                       <p className="text-sm font-semibold">${plan.amount}</p>

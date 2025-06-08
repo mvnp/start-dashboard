@@ -74,7 +74,6 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
     if (customerPlan) {
       form.reset({
         customerId: customerPlan.customerId,
-        entrepreneurId: customerPlan.entrepreneurId,
         priceTableId: customerPlan.priceTableId,
         amount: customerPlan.amount || "",
         payStatus: customerPlan.payStatus as any,
@@ -88,7 +87,6 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
     } else {
       form.reset({
         customerId: 0,
-        entrepreneurId: 0,
         priceTableId: 0,
         amount: "",
         payStatus: "pending",
