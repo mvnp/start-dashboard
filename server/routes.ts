@@ -760,7 +760,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/accounting", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertAccountingSchema.parse(req.body);
+      const { date, ...otherData } = req.body;
+      const processedData = {
+        ...otherData,
+        date: new Date(date)
+      };
+      const validatedData = insertAccountingSchema.parse(processedData);
       const entry = await storage.createAccountingEntry(validatedData);
       res.status(201).json(entry);
     } catch (error) {

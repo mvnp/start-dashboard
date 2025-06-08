@@ -299,12 +299,16 @@ export const insertAccountingSchema = createInsertSchema(accounting).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  date: z.coerce.date(),
 });
 
 export const updateAccountingSchema = createInsertSchema(accounting).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  date: z.coerce.date().optional(),
 }).partial();
 
 export type InsertAccounting = z.infer<typeof insertAccountingSchema>;
