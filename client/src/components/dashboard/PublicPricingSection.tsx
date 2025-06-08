@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ExternalLink, Star, Zap, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import type { PriceTable } from "@shared/schema";
 
 export function PublicPricingSection() {
+  const [is12MonthPlan, setIs12MonthPlan] = useState(false);
+  
   const { data: priceTables = [], isLoading } = useQuery<PriceTable[]>({
     queryKey: ["/api/price-tables"],
   });
@@ -54,6 +58,26 @@ export function PublicPricingSection() {
         <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           Select the perfect plan that fits your needs. Upgrade or downgrade at any time.
         </p>
+        
+        {/* Plan Duration Toggle */}
+        <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span className={`text-sm font-medium ${!is12MonthPlan ? 'text-blue-600' : 'text-gray-500'}`}>
+            3-Month Plan
+          </span>
+          <Switch
+            checked={is12MonthPlan}
+            onCheckedChange={setIs12MonthPlan}
+            className="data-[state=checked]:bg-blue-600"
+          />
+          <span className={`text-sm font-medium ${is12MonthPlan ? 'text-blue-600' : 'text-gray-500'}`}>
+            12-Month Plan
+          </span>
+          {is12MonthPlan && (
+            <Badge variant="secondary" className="ml-2">
+              Best Value
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Pricing Plans Grid */}

@@ -80,7 +80,11 @@ export function PriceTablesSection() {
   };
 
   const activePlans = priceTables.filter(table => table.isActive);
-  const totalRevenue = priceTables.reduce((sum, table) => sum + parseFloat(table.currentPrice), 0);
+  const totalRevenue = priceTables.reduce((sum, table) => {
+    const price3x = parseFloat(table.currentPrice3x) || 0;
+    const price12x = parseFloat(table.currentPrice12x) || 0;
+    return sum + price3x + price12x;
+  }, 0);
 
   if (isLoading) {
     return (
@@ -175,10 +179,18 @@ export function PriceTablesSection() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="text-2xl font-bold text-primary">
-                  ${priceTable.currentPrice}
-                  {priceTable.oldPrice && (
+                  3x: ${priceTable.currentPrice3x}
+                  {priceTable.oldPrice3x && (
                     <span className="text-sm text-gray-500 line-through ml-2">
-                      ${priceTable.oldPrice}
+                      ${priceTable.oldPrice3x}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xl font-semibold text-secondary">
+                  12x: ${priceTable.currentPrice12x}
+                  {priceTable.oldPrice12x && (
+                    <span className="text-sm text-gray-500 line-through ml-2">
+                      ${priceTable.oldPrice12x}
                     </span>
                   )}
                 </div>
