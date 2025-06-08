@@ -396,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/whatsapp-instances/:id", async (req, res) => {
+  app.put("/api/whatsapp-instances/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = updateWhatsappInstanceSchema.parse(req.body);
@@ -416,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/whatsapp-instances/:id", async (req, res) => {
+  app.delete("/api/whatsapp-instances/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteWhatsappInstance(id);
@@ -431,7 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // QR Code generation endpoint
-  app.post("/api/whatsapp-instances/:id/qrcode", async (req, res) => {
+  app.post("/api/whatsapp-instances/:id/qrcode", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const instance = await storage.getWhatsappInstance(id);
