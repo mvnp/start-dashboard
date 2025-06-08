@@ -11,39 +11,28 @@ import type { UserRole, NavigationItem } from '@/lib/types';
 const navigationMenus: Record<UserRole, NavigationItem[]> = {
   'super-admin': [
     { icon: 'BarChart3', label: 'Dashboard', href: '/dashboard', active: true },
+    { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'Users', label: 'User Management', href: '/users' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'MessageSquare', label: 'WhatsApp Instances', href: '/whatsapp-instances' },
-    { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
-    { icon: 'Headphones', label: 'Support', href: '/support' },
-    { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
     { icon: 'Receipt', label: 'Accounting', href: '/accounting' },
-
-    { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
-    { icon: 'Settings', label: 'System Settings' },
-    { icon: 'TrendingUp', label: 'Analytics' },
-    { icon: 'Shield', label: 'Security' },
-    { icon: 'Database', label: 'Database' },
-    { icon: 'FileText', label: 'Reports' }
+    { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
+    { icon: 'Headphones', label: 'Support', href: '/support' },
+    { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' }
   ],
   'entrepreneur': [
     { icon: 'BarChart3', label: 'Dashboard', href: '/dashboard', active: true },
-    { icon: 'Briefcase', label: 'My Business' },
+    { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'Users', label: 'Collaborators', href: '/collaborators' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'MessageSquare', label: 'WhatsApp Instances', href: '/whatsapp-instances' },
-    { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
-    { icon: 'Headphones', label: 'Support', href: '/support' },
-    { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
     { icon: 'Receipt', label: 'Accounting', href: '/accounting' },
-    { icon: 'TrendingUp', label: 'Analytics' },
-    { icon: 'DollarSign', label: 'Revenue' },
-    { icon: 'FileIcon', label: 'Projects' },
-    { icon: 'Calendar', label: 'Schedule' }
+    { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
+    { icon: 'Headphones', label: 'Support', href: '/support' }
   ],
   'collaborator': [
     { icon: 'BarChart3', label: 'Dashboard', active: true },
