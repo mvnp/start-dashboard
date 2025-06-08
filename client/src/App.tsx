@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import Users from "@/pages/Users";
 import PaymentGateways from "@/pages/PaymentGateways";
 import Collaborators from "@/pages/Collaborators";
+import MockDataGenerator from "@/pages/MockDataGenerator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/users" component={Users} />
           <Route path="/payment-gateways" component={PaymentGateways} />
           <Route path="/collaborators" component={Collaborators} />
+          <Route path="/mock-data" component={MockDataGenerator} />
         </>
       )}
       <Route component={NotFound} />

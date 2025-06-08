@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import type { User, PaymentGateway } from "@shared/schema";
 import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema } from "@shared/schema";
 import { z } from "zod";
+import bcrypt from "bcrypt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -43,6 +44,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error during logout:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Utility routes for mock data generation
+  app.post("/api/utils/bcrypt", async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({ message: "Password is required" });
+      }
+
+      const saltRounds = 10;
+      const hash = await bcrypt.hash(password, saltRounds);
+      
+      res.json({ hash });
+    } catch (error) {
+      console.error("Error generating bcrypt hash:", error);
+      res.status(500).json({ message: "Failed to generate bcrypt hash" });
     }
   });
 

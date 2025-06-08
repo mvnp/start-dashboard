@@ -4,7 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut } from 'lucide-react';
+import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut, Code2 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import type { UserRole, NavigationItem } from '@/lib/types';
 
@@ -13,6 +13,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'BarChart3', label: 'Dashboard', href: '/', active: true },
     { icon: 'Users', label: 'User Management', href: '/users' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
+    { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'Shield', label: 'Security' },
@@ -70,7 +71,8 @@ const iconMap = {
   CreditCard,
   Headphones,
   Star,
-  Wallet
+  Wallet,
+  Code2
 };
 
 interface SidebarProps {
