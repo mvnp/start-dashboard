@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import type { User, PaymentGateway } from "@shared/schema";
-import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema, insertCustomerPlanSchema, updateCustomerPlanSchema, insertSupportTicketSchema } from "@shared/schema";
+import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema, insertCustomerPlanSchema, updateCustomerPlanSchema, insertSupportTicketSchema, insertAccountingSchema, updateAccountingSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -729,6 +729,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating support ticket:", error);
       res.status(500).json({ message: "Failed to update support ticket" });
+    }
+  });
+
+  // Accounting CRUD routes
+  app.get("/api/accounting", requireAuth, async (req, res) => {
+    try {
+      const entrepreneurId = parseInt(req.query.entrepreneurId as string) || req.userId;
+      const entries = await storage.getAllAccountingEntries(entrepreneurId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching accounting entries:", error);
+      res.status(500).json({ message: "Failed to fetch accounting entries" });
+    }
+  });
+
+  app.get("/api/accounting/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const entry = await storage.getAccountingEntry(id);
+      if (!entry) {
+        return res.status(404).json({ message: "Accounting entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching accounting entry:", error);
+      res.status(500).json({ message: "Failed to fetch accounting entry" });
+    }
+  });
+
+  app.post("/api/accounting", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertAccountingSchema.parse(req.body);
+      const entry = await storage.createAccountingEntry(validatedData);
+      res.status(201).json(entry);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating accounting entry:", error);
+      res.status(500).json({ message: "Failed to create accounting entry" });
+    }
+  });
+
+  app.patch("/api/accounting/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = updateAccountingSchema.parse(req.body);
+      const entry = await storage.updateAccountingEntry(id, validatedData);
+      if (!entry) {
+        return res.status(404).json({ message: "Accounting entry not found" });
+      }
+      res.json(entry);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error updating accounting entry:", error);
+      res.status(500).json({ message: "Failed to update accounting entry" });
+    }
+  });
+
+  app.delete("/api/accounting/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteAccountingEntry(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Accounting entry not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting accounting entry:", error);
+      res.status(500).json({ message: "Failed to delete accounting entry" });
     }
   });
 

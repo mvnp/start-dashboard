@@ -281,3 +281,32 @@ export type SupportTicket = typeof supportTickets.$inferSelect;
 export type SupportTicketWithAssignee = SupportTicket & {
   assignee?: Pick<User, 'id' | 'name' | 'email'> | null;
 };
+
+// Accounting table
+export const accounting = pgTable("accounting", {
+  id: serial("id").primaryKey(),
+  entrepreneurId: integer("entrepreneur_id").references(() => users.id).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  date: timestamp("date").notNull(),
+  type: varchar("type", { length: 10 }).notNull(), // 'receives' or 'expenses'
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAccountingSchema = createInsertSchema(accounting).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateAccountingSchema = createInsertSchema(accounting).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
+
+export type InsertAccounting = z.infer<typeof insertAccountingSchema>;
+export type UpdateAccounting = z.infer<typeof updateAccountingSchema>;
+export type Accounting = typeof accounting.$inferSelect;

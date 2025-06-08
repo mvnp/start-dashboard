@@ -1,4 +1,4 @@
-import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, supportTickets, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails, type SupportTicket, type InsertSupportTicket, type UpdateSupportTicket, type SupportTicketWithAssignee } from "@shared/schema";
+import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, supportTickets, accounting, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails, type SupportTicket, type InsertSupportTicket, type UpdateSupportTicket, type SupportTicketWithAssignee, type Accounting, type InsertAccounting, type UpdateAccounting } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -54,6 +54,13 @@ export interface IStorage {
   createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket>;
   updateSupportTicket(id: number, ticket: UpdateSupportTicket): Promise<SupportTicket | undefined>;
   deleteSupportTicket(id: number): Promise<boolean>;
+
+  // Accounting operations
+  getAccountingEntry(id: number): Promise<Accounting | undefined>;
+  getAllAccountingEntries(entrepreneurId: number): Promise<Accounting[]>;
+  createAccountingEntry(entry: InsertAccounting): Promise<Accounting>;
+  updateAccountingEntry(id: number, entry: UpdateAccounting): Promise<Accounting | undefined>;
+  deleteAccountingEntry(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -385,6 +392,38 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSupportTicket(id: number): Promise<boolean> {
     const result = await db.delete(supportTickets).where(eq(supportTickets.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Accounting operations
+  async getAccountingEntry(id: number): Promise<Accounting | undefined> {
+    const [entry] = await db.select().from(accounting).where(eq(accounting.id, id));
+    return entry || undefined;
+  }
+
+  async getAllAccountingEntries(entrepreneurId: number): Promise<Accounting[]> {
+    return await db.select().from(accounting).where(eq(accounting.entrepreneurId, entrepreneurId));
+  }
+
+  async createAccountingEntry(insertEntry: InsertAccounting): Promise<Accounting> {
+    const [entry] = await db
+      .insert(accounting)
+      .values(insertEntry)
+      .returning();
+    return entry;
+  }
+
+  async updateAccountingEntry(id: number, updateEntry: UpdateAccounting): Promise<Accounting | undefined> {
+    const [entry] = await db
+      .update(accounting)
+      .set({ ...updateEntry, updatedAt: new Date() })
+      .where(eq(accounting.id, id))
+      .returning();
+    return entry || undefined;
+  }
+
+  async deleteAccountingEntry(id: number): Promise<boolean> {
+    const result = await db.delete(accounting).where(eq(accounting.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }
