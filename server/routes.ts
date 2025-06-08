@@ -26,28 +26,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", logout);
   app.post("/api/auth/logout-all", authenticateToken, logoutFromAllDevices);
   
-  // Temporary password reset endpoint for all users
-  app.post("/api/auth/reset-all-passwords", async (req, res) => {
-    try {
-      const { hashPassword } = await import('./auth');
-      const hashedPassword = await hashPassword('pwd123');
-      
-      // Reset all user passwords directly in database
-      const updatedUsers = await db
-        .update(users)
-        .set({ password: hashedPassword, updatedAt: new Date() })
-        .returning();
-      
-      res.json({ 
-        message: `All ${updatedUsers.length} user passwords reset to pwd123`, 
-        users: updatedUsers.map(u => u.email),
-        hashLength: hashedPassword.length 
-      });
-    } catch (error) {
-      console.error('Password reset error:', error);
-      res.status(500).json({ error: 'Password reset failed' });
-    }
-  });
+
 
   // Utility routes for mock data generation
   app.post("/api/utils/bcrypt", async (req, res) => {
