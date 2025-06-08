@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { login, verifyToken, authenticateToken, authorize, authorizeEntrepreneurOrAdmin, authorizeResourceOwner } from "./auth";
 import type { User, PaymentGateway } from "@shared/schema";
 import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema, insertCustomerPlanSchema, updateCustomerPlanSchema, insertSupportTicketSchema, insertAccountingSchema, updateAccountingSchema } from "@shared/schema";
 import { z } from "zod";
@@ -15,35 +16,10 @@ const requireAuth = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
-      }
-
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-
-      // In a real app, you would verify the hashed password
-      // For now, we'll check if password matches the stored password
-      if (user.password !== password) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-
-      // Return user data without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error during login:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
+  
+  // Authentication routes with Swagger documentation
+  app.post("/api/auth/login", login);
+  app.get("/api/auth/verify", authenticateToken, verifyToken);
 
   app.post("/api/auth/logout", async (req, res) => {
     try {
@@ -74,8 +50,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Users CRUD routes
-  app.get("/api/users", async (req, res) => {
+  /**
+   * @swagger
+   * /api/users:
+   *   get:
+   *     tags: [Users]
+   *     summary: Get all users
+   *     description: Retrieve all users based on role and permissions
+   *     parameters:
+   *       - in: query
+   *         name: role
+   *         schema:
+   *           type: string
+   *           enum: [super-admin, entrepreneur, collaborator, customer]
+   *         description: User role for filtering
+   *       - in: query
+   *         name: entrepreneurId
+   *         schema:
+   *           type: integer
+   *         description: Entrepreneur ID for filtering users
+   *     responses:
+   *       200:
+   *         description: List of users
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/User'
+   *       500:
+   *         description: Internal server error
+   */
+  app.get("/api/users", authenticateToken, async (req, res) => {
     try {
       const userRole = req.query.role as string;
       const entrepreneurId = req.query.entrepreneurId ? parseInt(req.query.entrepreneurId as string) : undefined;
@@ -99,7 +105,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:id", async (req, res) => {
+  /**
+   * @swagger
+   * /api/users/{id}:
+   *   get:
+   *     tags: [Users]
+   *     summary: Get user by ID
+   *     description: Retrieve a specific user by their ID
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: User ID
+   *     responses:
+   *       200:
+   *         description: User details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/User'
+   *       404:
+   *         description: User not found
+   *       500:
+   *         description: Internal server error
+   */
+  app.get("/api/users/:id", authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const user = await storage.getUser(id);
@@ -113,7 +145,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+  /**
+   * @swagger
+   * /api/users:
+   *   post:
+   *     tags: [Users]
+   *     summary: Create a new user
+   *     description: Create a new user with the provided information
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateUser'
+   *     responses:
+   *       201:
+   *         description: User created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/User'
+   *       400:
+   *         description: Invalid data
+   *       500:
+   *         description: Internal server error
+   */
+  app.post("/api/users", authenticateToken, authorize(['super-admin', 'entrepreneur']), async (req, res) => {
     try {
       const validatedData = insertUserSchema.parse(req.body);
       const user = await storage.createUser(validatedData);
