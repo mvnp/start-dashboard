@@ -55,6 +55,31 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
     },
   });
 
+  // Calculate amount based on selected price table and plan type
+  const calculateAmount = (priceTableId: number, planType: "3x" | "12x") => {
+    const priceTable = priceTables.find(table => table.id === priceTableId);
+    if (!priceTable) return "";
+    
+    if (planType === "3x") {
+      return priceTable.currentPrice3x || "";
+    } else {
+      return priceTable.currentPrice12x || "";
+    }
+  };
+
+  // Watch for changes in price table and plan type to auto-calculate amount
+  const watchedPriceTableId = form.watch("priceTableId");
+  const watchedPlanType = form.watch("planType");
+
+  useEffect(() => {
+    if (watchedPriceTableId && watchedPlanType && !customerPlan) {
+      const calculatedAmount = calculateAmount(watchedPriceTableId, watchedPlanType as "3x" | "12x");
+      if (calculatedAmount) {
+        form.setValue("amount", calculatedAmount);
+      }
+    }
+  }, [watchedPriceTableId, watchedPlanType, priceTables, form, customerPlan]);
+
   useEffect(() => {
     if (customerPlan) {
       form.reset({
@@ -204,11 +229,25 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
 
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
-              <Input
-                {...form.register("amount")}
-                placeholder="Plan amount"
-                type="text"
-              />
+              <div className="relative">
+                <Input
+                  {...form.register("amount")}
+                  placeholder={!customerPlan ? "Auto-calculated from price table" : "Plan amount"}
+                  type="text"
+                  readOnly={!customerPlan && !!watchedPriceTableId && !!watchedPlanType}
+                  className={!customerPlan && !!watchedPriceTableId && !!watchedPlanType ? "bg-muted" : ""}
+                />
+                {!customerPlan && watchedPriceTableId && watchedPlanType && (
+                  <div className="absolute right-2 top-2 text-xs text-muted-foreground">
+                    Auto-calculated
+                  </div>
+                )}
+              </div>
+              {!customerPlan && watchedPriceTableId && watchedPlanType && (
+                <p className="text-xs text-muted-foreground">
+                  Amount calculated from {priceTables.find(t => t.id === watchedPriceTableId)?.title} - {watchedPlanType} plan
+                </p>
+              )}
             </div>
           </div>
 
