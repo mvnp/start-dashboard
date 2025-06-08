@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import type { User, PaymentGateway } from "@shared/schema";
-import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema } from "@shared/schema";
+import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -316,6 +316,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting collaborator:", error);
       res.status(500).json({ message: "Failed to delete collaborator" });
+    }
+  });
+
+  // WhatsApp Instances routes
+  app.get("/api/whatsapp-instances", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let instances;
+      if (user.role === 'super-admin') {
+        instances = await storage.getAllWhatsappInstances();
+      } else if (user.role === 'entrepreneur') {
+        instances = await storage.getAllWhatsappInstances(user.id);
+      } else {
+        instances = await storage.getAllWhatsappInstances(user.entrepreneurId!);
+      }
+      
+      res.json(instances);
+    } catch (error) {
+      console.error("Error fetching WhatsApp instances:", error);
+      res.status(500).json({ message: "Failed to fetch WhatsApp instances" });
+    }
+  });
+
+  app.get("/api/whatsapp-instances/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const instance = await storage.getWhatsappInstance(id);
+      if (!instance) {
+        return res.status(404).json({ message: "WhatsApp instance not found" });
+      }
+      res.json(instance);
+    } catch (error) {
+      console.error("Error fetching WhatsApp instance:", error);
+      res.status(500).json({ message: "Failed to fetch WhatsApp instance" });
+    }
+  });
+
+  app.post("/api/whatsapp-instances", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const validatedData = insertWhatsappInstanceSchema.parse(req.body);
+      
+      const entrepreneurId = user.role === 'entrepreneur' ? user.id : user.entrepreneurId!;
+      
+      const instance = await storage.createWhatsappInstance({
+        ...validatedData,
+        createdBy: user.id,
+        entrepreneurId: entrepreneurId,
+      });
+      
+      res.status(201).json(instance);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating WhatsApp instance:", error);
+      res.status(500).json({ message: "Failed to create WhatsApp instance" });
+    }
+  });
+
+  app.put("/api/whatsapp-instances/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = updateWhatsappInstanceSchema.parse(req.body);
+      
+      const instance = await storage.updateWhatsappInstance(id, validatedData);
+      if (!instance) {
+        return res.status(404).json({ message: "WhatsApp instance not found" });
+      }
+      
+      res.json(instance);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating WhatsApp instance:", error);
+      res.status(500).json({ message: "Failed to update WhatsApp instance" });
+    }
+  });
+
+  app.delete("/api/whatsapp-instances/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteWhatsappInstance(id);
+      if (!success) {
+        return res.status(404).json({ message: "WhatsApp instance not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting WhatsApp instance:", error);
+      res.status(500).json({ message: "Failed to delete WhatsApp instance" });
+    }
+  });
+
+  // QR Code generation endpoint
+  app.post("/api/whatsapp-instances/:id/qrcode", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const instance = await storage.getWhatsappInstance(id);
+      
+      if (!instance) {
+        return res.status(404).json({ message: "WhatsApp instance not found" });
+      }
+
+      // Make request to external API to get QR code
+      const qrResponse = await fetch(`${instance.apiUrl}/qrcode/${instance.instanceNumber}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!qrResponse.ok) {
+        throw new Error(`QR API responded with status: ${qrResponse.status}`);
+      }
+
+      const qrData = await qrResponse.json();
+      res.json(qrData);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      res.status(500).json({ message: "Failed to generate QR code" });
     }
   });
 
