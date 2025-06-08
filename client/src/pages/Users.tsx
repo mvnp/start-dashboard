@@ -34,11 +34,11 @@ export default function Users() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['/api/users', user.role, user.id],
-    queryFn: () => apiRequest(`/api/users?role=${user.role}&entrepreneurId=${user.id}`),
   });
 
   const deleteUserMutation = useMutation({
