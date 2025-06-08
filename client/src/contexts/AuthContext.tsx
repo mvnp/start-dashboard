@@ -32,8 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    console.log('Logout function executed');
     setUser(null);
     localStorage.setItem('isLoggedOut', 'true');
+    console.log('User set to null and localStorage updated');
+    // Force page reload to ensure clean state
+    window.location.reload();
   };
 
   const login = () => {

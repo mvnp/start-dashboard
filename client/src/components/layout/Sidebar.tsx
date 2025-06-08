@@ -200,8 +200,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             onClick={() => {
+              console.log('Logout button clicked');
               logout();
-              // No need for window.location.href redirect as React routing will handle it
+              console.log('Logout function called');
             }}
             variant="outline"
             className="w-full flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-600"
