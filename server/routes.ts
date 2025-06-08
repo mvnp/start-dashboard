@@ -88,7 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Entrepreneur and collaborators see their entrepreneur's users
         users = await storage.getAllUsers(entrepreneurId);
       } else {
-        users = [];
+        // If no specific role/entrepreneurId is provided, return all users for component usage
+        users = await storage.getAllUsers();
       }
       
       res.json(users);
