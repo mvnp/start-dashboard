@@ -339,36 +339,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllSupportTickets(): Promise<SupportTicketWithAssignee[]> {
-    const tickets = await db
+    const results = await db
       .select({
-        id: supportTickets.id,
-        ticketId: supportTickets.ticketId,
-        name: supportTickets.name,
-        email: supportTickets.email,
-        phone: supportTickets.phone,
-        subject: supportTickets.subject,
-        category: supportTickets.category,
-        priority: supportTickets.priority,
-        message: supportTickets.message,
-        status: supportTickets.status,
-        assignedTo: supportTickets.assignedTo,
-        resolution: supportTickets.resolution,
-        createdAt: supportTickets.createdAt,
-        updatedAt: supportTickets.updatedAt,
-        resolvedAt: supportTickets.resolvedAt,
-        assignee: {
-          id: users.id,
-          name: users.name,
-          email: users.email,
-        },
+        ticket: supportTickets,
+        assignee: users,
       })
       .from(supportTickets)
       .leftJoin(users, eq(supportTickets.assignedTo, users.id))
       .orderBy(supportTickets.createdAt);
 
-    return tickets.map(ticket => ({
-      ...ticket,
-      assignee: ticket.assignee.id ? ticket.assignee : null,
+    return results.map(row => ({
+      ...row.ticket,
+      assignee: row.assignee ? {
+        id: row.assignee.id,
+        name: row.assignee.name,
+        email: row.assignee.email,
+      } : null,
     }));
   }
 
