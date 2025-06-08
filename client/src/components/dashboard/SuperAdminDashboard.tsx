@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DashboardCard } from './DashboardCard';
 import { PriceTablesSection } from './PriceTablesSection';
 import { PublicPricingSection } from './PublicPricingSection';
+import { CustomerPlansSection } from './CustomerPlansSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -72,12 +73,18 @@ export function SuperAdminDashboard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+        <TabsList className="grid w-full grid-cols-4 h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
           <TabsTrigger 
             value="overview" 
             className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-blue-500 data-[state=active]:text-white"
           >
             📊 Dashboard Overview
+          </TabsTrigger>
+          <TabsTrigger 
+            value="customer-plans" 
+            className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+          >
+            💳 Customer Plans
           </TabsTrigger>
           <TabsTrigger 
             value="pricing-management" 
@@ -165,6 +172,10 @@ export function SuperAdminDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="customer-plans">
+          <CustomerPlansSection />
         </TabsContent>
 
         <TabsContent value="pricing-management">
