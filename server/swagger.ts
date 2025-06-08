@@ -305,8 +305,38 @@ const options = {
         AuthResponse: {
           type: 'object',
           properties: {
-            token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+            accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+            refreshToken: { type: 'string', example: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0' },
+            expiresIn: { type: 'string', example: '15m' },
             user: { $ref: '#/components/schemas/User' }
+          }
+        },
+        RefreshTokenRequest: {
+          type: 'object',
+          required: ['refreshToken'],
+          properties: {
+            refreshToken: { type: 'string', example: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0' }
+          }
+        },
+        RefreshTokenResponse: {
+          type: 'object',
+          properties: {
+            accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+            refreshToken: { type: 'string', example: 'b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0a1' },
+            expiresIn: { type: 'string', example: '15m' }
+          }
+        },
+        LogoutRequest: {
+          type: 'object',
+          properties: {
+            refreshToken: { type: 'string', example: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0' },
+            logoutFromAllDevices: { type: 'boolean', default: false }
+          }
+        },
+        LogoutResponse: {
+          type: 'object',
+          properties: {
+            message: { type: 'string', example: 'Logout successful' }
           }
         },
         Error: {

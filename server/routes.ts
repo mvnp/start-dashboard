@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { login, verifyToken, authenticateToken, authorize, authorizeEntrepreneurOrAdmin, authorizeResourceOwner } from "./auth";
+import { login, verifyToken, refreshToken, logout, logoutFromAllDevices, authenticateToken, authorize, authorizeEntrepreneurOrAdmin, authorizeResourceOwner } from "./auth";
 import type { User, PaymentGateway } from "@shared/schema";
 import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema, insertCustomerPlanSchema, updateCustomerPlanSchema, insertSupportTicketSchema, insertAccountingSchema, updateAccountingSchema } from "@shared/schema";
 import { z } from "zod";
@@ -20,16 +20,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes with Swagger documentation
   app.post("/api/auth/login", login);
   app.get("/api/auth/verify", authenticateToken, verifyToken);
-
-  app.post("/api/auth/logout", async (req, res) => {
-    try {
-      // In a real app, you would invalidate the session/token
-      res.json({ message: "Logged out successfully" });
-    } catch (error) {
-      console.error("Error during logout:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
+  app.post("/api/auth/refresh", refreshToken);
+  app.post("/api/auth/logout", logout);
+  app.post("/api/auth/logout-all", authenticateToken, logoutFromAllDevices);
 
   // Utility routes for mock data generation
   app.post("/api/utils/bcrypt", async (req, res) => {

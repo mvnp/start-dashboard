@@ -170,6 +170,227 @@ export async function verifyToken(req: Request, res: Response) {
   }
 }
 
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Refresh access token
+ *     description: Generate a new access token using a valid refresh token
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Valid refresh token
+ *                 example: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                   description: New access token
+ *                 refreshToken:
+ *                   type: string
+ *                   description: New refresh token
+ *                 expiresIn:
+ *                   type: string
+ *                   description: Access token expiration time
+ *       401:
+ *         description: Invalid or expired refresh token
+ *       400:
+ *         description: Bad request
+ */
+export async function refreshToken(req: Request, res: Response) {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token is required' });
+    }
+
+    // Clean expired tokens
+    await storage.cleanExpiredTokens();
+
+    // Validate refresh token
+    const storedToken = await storage.getRefreshToken(refreshToken);
+    if (!storedToken) {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    // Check if token is expired
+    if (new Date() > storedToken.expiresAt) {
+      await storage.revokeRefreshToken(refreshToken);
+      return res.status(401).json({ error: 'Refresh token expired' });
+    }
+
+    // Get user details
+    const user = await storage.getUser(storedToken.userId);
+    if (!user) {
+      await storage.revokeRefreshToken(refreshToken);
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Revoke old refresh token for security (token rotation)
+    await storage.revokeRefreshToken(refreshToken);
+
+    // Generate new tokens
+    const payload: JWTPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      entrepreneurId: user.entrepreneurId
+    };
+
+    const newAccessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as SignOptions);
+    const newRefreshToken = generateRefreshToken();
+
+    // Store new refresh token
+    await storage.createRefreshToken({
+      token: newRefreshToken,
+      userId: user.id,
+      expiresAt: getRefreshTokenExpiry()
+    });
+
+    res.json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      expiresIn: JWT_EXPIRES_IN
+    });
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: User logout
+ *     description: Logout user and revoke refresh token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token to revoke
+ *                 example: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0"
+ *               logoutFromAllDevices:
+ *                 type: boolean
+ *                 description: Whether to logout from all devices
+ *                 default: false
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Logout successful"
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+export async function logout(req: Request, res: Response) {
+  try {
+    const { refreshToken, logoutFromAllDevices } = req.body;
+
+    if (logoutFromAllDevices && req.user) {
+      // Logout from all devices - revoke all user's refresh tokens
+      await storage.revokeAllUserTokens(req.user.id);
+      return res.json({ message: 'Logged out from all devices successfully' });
+    }
+
+    if (refreshToken) {
+      // Logout from current device - revoke specific refresh token
+      await storage.revokeRefreshToken(refreshToken);
+      return res.json({ message: 'Logout successful' });
+    }
+
+    // If no refresh token provided but user is authenticated, revoke all tokens
+    if (req.user) {
+      await storage.revokeAllUserTokens(req.user.id);
+      return res.json({ message: 'Logout successful' });
+    }
+
+    return res.status(400).json({ error: 'No valid logout method provided' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/auth/logout-all:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Logout from all devices
+ *     description: Revoke all refresh tokens for the authenticated user
+ *     responses:
+ *       200:
+ *         description: Logout from all devices successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Logged out from all devices successfully"
+ *                 revokedTokens:
+ *                   type: integer
+ *                   description: Number of tokens revoked
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ */
+export async function logoutFromAllDevices(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const success = await storage.revokeAllUserTokens(req.user.id);
+    
+    if (success) {
+      res.json({ 
+        message: 'Logged out from all devices successfully'
+      });
+    } else {
+      res.json({ 
+        message: 'No active sessions found'
+      });
+    }
+  } catch (error) {
+    console.error('Logout from all devices error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 // JWT Authentication Middleware
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
