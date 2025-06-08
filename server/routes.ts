@@ -130,8 +130,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/payment-gateways", async (req, res) => {
     try {
       const validatedData = insertPaymentGatewaySchema.parse(req.body);
-      // For now, using a mock user ID - in real implementation, this would come from authentication
-      const gateway = await storage.createPaymentGateway({ ...validatedData, createdBy: 1 });
+      const entrepreneurId = req.body.entrepreneurId || 2; // Default to entrepreneur ID 2
+      const gateway = await storage.createPaymentGateway({ 
+        ...validatedData, 
+        createdBy: 1, 
+        entrepreneurId: entrepreneurId 
+      });
       res.status(201).json(gateway);
     } catch (error) {
       if (error instanceof z.ZodError) {

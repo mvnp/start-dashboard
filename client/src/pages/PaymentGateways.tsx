@@ -33,7 +33,8 @@ export default function PaymentGateways() {
   const queryClient = useQueryClient();
 
   const { data: gateways = [], isLoading } = useQuery<PaymentGateway[]>({
-    queryKey: ['/api/payment-gateways'],
+    queryKey: ['/api/payment-gateways', user.role, user.id],
+    queryFn: () => apiRequest(`/api/payment-gateways?role=${user.role}&entrepreneurId=${user.id}`),
   });
 
   const deleteGatewayMutation = useMutation({

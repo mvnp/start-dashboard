@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { UserDialog } from '@/components/users/UserDialog';
@@ -36,7 +37,8 @@ export default function Users() {
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ['/api/users'],
+    queryKey: ['/api/users', user.role, user.id],
+    queryFn: () => apiRequest(`/api/users?role=${user.role}&entrepreneurId=${user.id}`),
   });
 
   const deleteUserMutation = useMutation({
