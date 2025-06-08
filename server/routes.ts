@@ -210,6 +210,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment Gateways CRUD routes
+  /**
+   * @swagger
+   * /api/payment-gateways:
+   *   get:
+   *     tags: [Payment Gateways]
+   *     summary: Get all payment gateways
+   *     description: Retrieve payment gateways based on user role and permissions. Super-admins see all gateways, entrepreneurs see their own.
+   *     parameters:
+   *       - in: query
+   *         name: role
+   *         required: true
+   *         schema:
+   *           type: string
+   *           enum: [super-admin, entrepreneur, collaborator, customer]
+   *         description: User role for filtering gateways
+   *       - in: query
+   *         name: entrepreneurId
+   *         schema:
+   *           type: integer
+   *         description: Entrepreneur ID for filtering (required for non-super-admin users)
+   *       - in: query
+   *         name: type
+   *         schema:
+   *           type: string
+   *           enum: [asaas, mercado_pago, pagseguro]
+   *         description: Filter by gateway type
+   *       - in: query
+   *         name: isActive
+   *         schema:
+   *           type: boolean
+   *         description: Filter by active status
+   *     responses:
+   *       200:
+   *         description: List of payment gateways
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/PaymentGateway'
+   *       400:
+   *         description: Bad request
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/payment-gateways", async (req, res) => {
     try {
       const userRole = req.query.role as string;
@@ -233,6 +278,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/payment-gateways/{id}:
+   *   get:
+   *     tags: [Payment Gateways]
+   *     summary: Get payment gateway by ID
+   *     description: Retrieve a specific payment gateway by its ID
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Payment gateway ID
+   *     responses:
+   *       200:
+   *         description: Payment gateway details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PaymentGateway'
+   *       404:
+   *         description: Payment gateway not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/payment-gateways/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -247,6 +318,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/payment-gateways:
+   *   post:
+   *     tags: [Payment Gateways]
+   *     summary: Create a new payment gateway
+   *     description: Create a new payment gateway configuration for processing payments
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreatePaymentGateway'
+   *           examples:
+   *             asaas:
+   *               summary: Asaas Gateway
+   *               value:
+   *                 name: "Asaas Production Gateway"
+   *                 type: "asaas"
+   *                 apiUrl: "https://www.asaas.com/api/v3"
+   *                 publicKey: "pub_asaas123456789"
+   *                 token: "$aact_YTU5YTE0M2M2N2I4MTliNzk0YTI5N2U5MzAwNjJmNDQ6OjAwMDAwMDAwMDAwMDAwMDAwMDA="
+   *                 email: "payments@company.com"
+   *                 isActive: true
+   *             mercadoPago:
+   *               summary: Mercado Pago Gateway
+   *               value:
+   *                 name: "Mercado Pago Gateway"
+   *                 type: "mercado_pago"
+   *                 apiUrl: "https://api.mercadopago.com"
+   *                 publicKey: "APP_USR-abc123456789-def456"
+   *                 token: "APP_USR-123456789-012345-xyz789"
+   *                 email: "payments@company.com"
+   *                 isActive: true
+   *             pagseguro:
+   *               summary: PagSeguro Gateway
+   *               value:
+   *                 name: "PagSeguro Gateway"
+   *                 type: "pagseguro"
+   *                 apiUrl: "https://ws.pagseguro.uol.com.br"
+   *                 publicKey: "pagseguro_public_key"
+   *                 token: "pagseguro_token_123456"
+   *                 email: "payments@company.com"
+   *                 isActive: true
+   *     responses:
+   *       201:
+   *         description: Payment gateway created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PaymentGateway'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       500:
+   *         description: Internal server error
+   */
   app.post("/api/payment-gateways", async (req, res) => {
     try {
       const validatedData = insertPaymentGatewaySchema.parse(req.body);
@@ -266,6 +404,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/payment-gateways/{id}:
+   *   put:
+   *     tags: [Payment Gateways]
+   *     summary: Update payment gateway
+   *     description: Update an existing payment gateway configuration
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Payment gateway ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 example: "Updated Asaas Gateway"
+   *               type:
+   *                 type: string
+   *                 enum: [asaas, mercado_pago, pagseguro]
+   *                 example: "asaas"
+   *               apiUrl:
+   *                 type: string
+   *                 example: "https://www.asaas.com/api/v3"
+   *               publicKey:
+   *                 type: string
+   *                 example: "pub_updated123456789"
+   *               token:
+   *                 type: string
+   *                 example: "$aact_updated_token"
+   *               email:
+   *                 type: string
+   *                 example: "updated@company.com"
+   *               isActive:
+   *                 type: boolean
+   *                 example: true
+   *           examples:
+   *             updateGateway:
+   *               summary: Update gateway configuration
+   *               value:
+   *                 name: "Updated Production Gateway"
+   *                 apiUrl: "https://www.asaas.com/api/v3"
+   *                 publicKey: "pub_updated123456"
+   *                 token: "$aact_updated_token"
+   *                 email: "payments-new@company.com"
+   *                 isActive: true
+   *     responses:
+   *       200:
+   *         description: Payment gateway updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PaymentGateway'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       404:
+   *         description: Payment gateway not found
+   *       500:
+   *         description: Internal server error
+   */
   app.put("/api/payment-gateways/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -284,6 +500,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/payment-gateways/{id}:
+   *   delete:
+   *     tags: [Payment Gateways]
+   *     summary: Delete payment gateway
+   *     description: Delete a payment gateway by ID. This action is permanent and will affect any ongoing payment processing.
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Payment gateway ID
+   *     responses:
+   *       204:
+   *         description: Payment gateway deleted successfully
+   *       404:
+   *         description: Payment gateway not found
+   *       500:
+   *         description: Internal server error
+   */
   app.delete("/api/payment-gateways/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
