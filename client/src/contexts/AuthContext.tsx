@@ -5,7 +5,7 @@ interface AuthContextType {
   user: User | null;
   setUserRole: (role: UserRole) => void;
   logout: () => void;
-  login: () => void;
+  login: (userData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,29 +20,35 @@ const mockUser: User = {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    // Check if user is logged out in localStorage
-    const isLoggedOut = localStorage.getItem('isLoggedOut');
-    return isLoggedOut === 'true' ? null : mockUser;
+    // Check for stored user data
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch {
+        localStorage.removeItem('user');
+      }
+    }
+    return null;
   });
 
   const setUserRole = (role: UserRole) => {
     if (user) {
-      setUser(prev => prev ? { ...prev, role } : null);
+      const updatedUser = { ...user, role };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
   const logout = () => {
-    console.log('Logout function executed');
     setUser(null);
-    localStorage.setItem('isLoggedOut', 'true');
-    console.log('User set to null and localStorage updated');
-    // Force page reload to ensure clean state
-    window.location.reload();
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   };
 
-  const login = () => {
-    setUser(mockUser);
-    localStorage.removeItem('isLoggedOut');
+  const login = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   return (

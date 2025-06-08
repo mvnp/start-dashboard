@@ -7,7 +7,7 @@ export default function Landing() {
   const { login } = useAuth();
   
   const handleLogin = () => {
-    login();
+    window.location.href = '/login';
   };
 
   return (

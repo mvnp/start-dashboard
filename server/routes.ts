@@ -6,6 +6,46 @@ import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updateP
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // In a real app, you would verify the hashed password
+      // For now, we'll check if password matches the stored password
+      if (user.password !== password) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Return user data without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      // In a real app, you would invalidate the session/token
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Users CRUD routes
   app.get("/api/users", async (req, res) => {
     try {
