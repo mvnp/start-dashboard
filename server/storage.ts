@@ -1,4 +1,4 @@
-import { users, paymentGateways, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway } from "@shared/schema";
+import { users, paymentGateways, collaborators, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -17,6 +17,14 @@ export interface IStorage {
   createPaymentGateway(gateway: InsertPaymentGateway & { createdBy: number }): Promise<PaymentGateway>;
   updatePaymentGateway(id: number, gateway: UpdatePaymentGateway): Promise<PaymentGateway | undefined>;
   deletePaymentGateway(id: number): Promise<boolean>;
+
+  // Collaborator operations
+  getCollaborator(id: number): Promise<Collaborator | undefined>;
+  getAllCollaborators(): Promise<Collaborator[]>;
+  getCollaboratorsByEntrepreneur(entrepreneurId: number): Promise<Collaborator[]>;
+  createCollaborator(collaborator: InsertCollaborator & { entrepreneurId: number }): Promise<Collaborator>;
+  updateCollaborator(id: number, collaborator: UpdateCollaborator): Promise<Collaborator | undefined>;
+  deleteCollaborator(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -85,6 +93,42 @@ export class DatabaseStorage implements IStorage {
 
   async deletePaymentGateway(id: number): Promise<boolean> {
     const result = await db.delete(paymentGateways).where(eq(paymentGateways.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Collaborator operations
+  async getCollaborator(id: number): Promise<Collaborator | undefined> {
+    const [collaborator] = await db.select().from(collaborators).where(eq(collaborators.id, id));
+    return collaborator || undefined;
+  }
+
+  async getAllCollaborators(): Promise<Collaborator[]> {
+    return await db.select().from(collaborators);
+  }
+
+  async getCollaboratorsByEntrepreneur(entrepreneurId: number): Promise<Collaborator[]> {
+    return await db.select().from(collaborators).where(eq(collaborators.entrepreneurId, entrepreneurId));
+  }
+
+  async createCollaborator(collaborator: InsertCollaborator & { entrepreneurId: number }): Promise<Collaborator> {
+    const [createdCollaborator] = await db
+      .insert(collaborators)
+      .values(collaborator)
+      .returning();
+    return createdCollaborator;
+  }
+
+  async updateCollaborator(id: number, collaborator: UpdateCollaborator): Promise<Collaborator | undefined> {
+    const [updatedCollaborator] = await db
+      .update(collaborators)
+      .set({ ...collaborator, updatedAt: new Date() })
+      .where(eq(collaborators.id, id))
+      .returning();
+    return updatedCollaborator || undefined;
+  }
+
+  async deleteCollaborator(id: number): Promise<boolean> {
+    const result = await db.delete(collaborators).where(eq(collaborators.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

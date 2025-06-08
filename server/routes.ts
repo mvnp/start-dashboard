@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema } from "@shared/schema";
+import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -145,6 +145,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting payment gateway:", error);
       res.status(500).json({ message: "Failed to delete payment gateway" });
+    }
+  });
+
+  // Collaborators CRUD routes
+  app.get("/api/collaborators", async (req, res) => {
+    try {
+      const entrepreneurId = req.query.entrepreneurId;
+      let collaborators;
+      
+      if (entrepreneurId) {
+        collaborators = await storage.getCollaboratorsByEntrepreneur(parseInt(entrepreneurId as string));
+      } else {
+        collaborators = await storage.getAllCollaborators();
+      }
+      
+      res.json(collaborators);
+    } catch (error) {
+      console.error("Error fetching collaborators:", error);
+      res.status(500).json({ message: "Failed to fetch collaborators" });
+    }
+  });
+
+  app.get("/api/collaborators/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const collaborator = await storage.getCollaborator(id);
+      if (!collaborator) {
+        return res.status(404).json({ message: "Collaborator not found" });
+      }
+      res.json(collaborator);
+    } catch (error) {
+      console.error("Error fetching collaborator:", error);
+      res.status(500).json({ message: "Failed to fetch collaborator" });
+    }
+  });
+
+  app.post("/api/collaborators", async (req, res) => {
+    try {
+      const validatedData = insertCollaboratorSchema.parse(req.body);
+      // For now, using entrepreneur ID 2 - in real implementation, this would come from authentication
+      const collaborator = await storage.createCollaborator({ ...validatedData, entrepreneurId: 2 });
+      res.status(201).json(collaborator);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating collaborator:", error);
+      res.status(500).json({ message: "Failed to create collaborator" });
+    }
+  });
+
+  app.put("/api/collaborators/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = updateCollaboratorSchema.parse(req.body);
+      const collaborator = await storage.updateCollaborator(id, validatedData);
+      if (!collaborator) {
+        return res.status(404).json({ message: "Collaborator not found" });
+      }
+      res.json(collaborator);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating collaborator:", error);
+      res.status(500).json({ message: "Failed to update collaborator" });
+    }
+  });
+
+  app.delete("/api/collaborators/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteCollaborator(id);
+      if (!success) {
+        return res.status(404).json({ message: "Collaborator not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting collaborator:", error);
+      res.status(500).json({ message: "Failed to delete collaborator" });
     }
   });
 
