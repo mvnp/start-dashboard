@@ -91,7 +91,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
           payLink: customerPlan.payLink || "",
           payExpiration: customerPlan.payExpiration ? new Date(customerPlan.payExpiration).toISOString().split('T')[0] : "",
           planExpirationDate: customerPlan.planExpirationDate ? new Date(customerPlan.planExpirationDate).toISOString().split('T')[0] : "",
-          isActive: customerPlan.isActive,
+          isActive: customerPlan.isActive ?? true,
         });
       } else {
         form.reset({
@@ -126,7 +126,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
       };
 
       if (customerPlan) {
-        return apiRequest(`/api/customer-plans/${customerPlan.id}`, {
+        const response = await fetch(`/api/customer-plans/${customerPlan.id}`, {
           method: "PUT",
           body: JSON.stringify(formattedData),
           headers: { 
@@ -134,8 +134,10 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
             'x-user-id': '1'
           },
         });
+        if (!response.ok) throw new Error('Failed to update customer plan');
+        return response.json();
       } else {
-        return apiRequest("/api/customer-plans", {
+        const response = await fetch("/api/customer-plans", {
           method: "POST",
           body: JSON.stringify(formattedData),
           headers: { 
@@ -143,6 +145,8 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
             'x-user-id': '1'
           },
         });
+        if (!response.ok) throw new Error('Failed to create customer plan');
+        return response.json();
       }
     },
     onSuccess: () => {
@@ -360,7 +364,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                 <FormItem>
                   <FormLabel>Payment Hash</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Payment transaction hash" />
+                    <Input {...field} value={field.value || ""} placeholder="Payment transaction hash" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -374,7 +378,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                 <FormItem>
                   <FormLabel>Payment Link</FormLabel>
                   <FormControl>
-                    <Input {...field} type="url" placeholder="https://payment-link.com" />
+                    <Input {...field} value={field.value || ""} type="url" placeholder="https://payment-link.com" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -440,7 +444,7 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
                   </div>
                   <FormControl>
                     <Switch
-                      checked={field.value}
+                      checked={field.value ?? true}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>

@@ -39,6 +39,7 @@ function Router() {
           <Route path="/payment-gateways" component={PaymentGateways} />
           <Route path="/collaborators" component={Collaborators} />
           <Route path="/whatsapp-instances" component={WhatsappInstances} />
+          <Route path="/customer-plans" component={CustomerPlans} />
 
           <Route path="/mock-data" component={MockDataGenerator} />
         </>
