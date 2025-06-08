@@ -178,21 +178,26 @@ export function PriceTablesSection() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="text-2xl font-bold text-primary">
-                  3x: ${priceTable.currentPrice3x}
-                  {priceTable.oldPrice3x && (
-                    <span className="text-sm text-gray-500 line-through ml-2">
-                      ${priceTable.oldPrice3x}
-                    </span>
-                  )}
-                </div>
-                <div className="text-xl font-semibold text-secondary">
-                  12x: ${priceTable.currentPrice12x}
-                  {priceTable.oldPrice12x && (
-                    <span className="text-sm text-gray-500 line-through ml-2">
-                      ${priceTable.oldPrice12x}
-                    </span>
-                  )}
+                <div className="space-y-1">
+                  <div className="text-lg font-medium text-gray-600 dark:text-gray-400">
+                    Duration: {priceTable.months} months
+                  </div>
+                  <div className="text-2xl font-bold text-primary">
+                    3x: ${priceTable.currentPrice3x}
+                    {priceTable.oldPrice3x && (
+                      <span className="text-sm text-gray-500 line-through ml-2">
+                        ${priceTable.oldPrice3x}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xl font-semibold text-secondary">
+                    12x: ${priceTable.currentPrice12x}
+                    {priceTable.oldPrice12x && (
+                      <span className="text-sm text-gray-500 line-through ml-2">
+                        ${priceTable.oldPrice12x}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 {priceTable.advantages && priceTable.advantages.length > 0 && (

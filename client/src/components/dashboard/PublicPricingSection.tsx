@@ -120,6 +120,9 @@ export function PublicPricingSection() {
                       {priceTable.subtitle}
                     </p>
                   )}
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">
+                    Duration: {priceTable.months} months
+                  </div>
                 </div>
               </CardHeader>
 
