@@ -90,12 +90,13 @@ export default function Collaborators() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
-      <main className="lg:ml-64 pt-16">
-        <div className="p-6 space-y-6">
+      <div className="flex-1 lg:ml-64">
+        <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
+        
+        <main className="p-6 pt-20 space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -296,8 +297,8 @@ export default function Collaborators() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </main>
+        </main>
+      </div>
 
       <CollaboratorDialog
         open={isDialogOpen}
