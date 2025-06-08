@@ -42,9 +42,20 @@ app.use((req, res, next) => {
   // Setup Swagger documentation
   setupSwagger(app);
   
-  // Run password migration to set "pwd123" for all users
-  console.log('Running password migration...');
-  await migrateUserPasswords();
+  // Run password migration only if needed (check if admin user has proper hash)
+  try {
+    const { storage } = await import('./storage');
+    const adminUser = await storage.getUserByEmail('admin@example.com');
+    if (adminUser && adminUser.password.length < 50) {
+      console.log('Running password migration...');
+      await migrateUserPasswords();
+    } else {
+      console.log('Password migration already completed, skipping...');
+    }
+  } catch (error) {
+    console.log('Migration check failed, running migration as fallback...');
+    await migrateUserPasswords();
+  }
   
   const server = await registerRoutes(app);
 
