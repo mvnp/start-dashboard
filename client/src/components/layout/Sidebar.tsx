@@ -14,8 +14,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'Users', label: 'User Management', href: '/users' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'MessageSquare', label: 'WhatsApp Instances', href: '/whatsapp-instances' },
-    { icon: 'Table', label: 'Price Tables', href: '/price-tables' },
-    { icon: 'Eye', label: 'Public Pricing', href: '/pricing' },
+
     { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },
     { icon: 'TrendingUp', label: 'Analytics' },
