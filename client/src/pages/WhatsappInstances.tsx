@@ -23,7 +23,7 @@ export default function WhatsappInstances() {
   const [editingInstance, setEditingInstance] = useState<WhatsappInstance | null>(null);
   const [qrCodeData, setQrCodeData] = useState<{ [key: number]: string }>({});
 
-  const { data: instances = [], isLoading } = useQuery({
+  const { data: instances = [], isLoading } = useQuery<WhatsappInstance[]>({
     queryKey: ['/api/whatsapp-instances'],
   });
 
@@ -68,7 +68,7 @@ export default function WhatsappInstances() {
     },
   });
 
-  const filteredInstances = instances.filter((instance: WhatsappInstance) =>
+  const filteredInstances = instances.filter((instance) =>
     instance.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     instance.instanceNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -154,7 +154,7 @@ export default function WhatsappInstances() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {instances.filter((i: WhatsappInstance) => i.isActive).length}
+                {instances.filter((i) => i.isActive).length}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Active</div>
             </CardContent>
@@ -162,7 +162,7 @@ export default function WhatsappInstances() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {instances.filter((i: WhatsappInstance) => !i.isActive).length}
+                {instances.filter((i) => !i.isActive).length}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Inactive</div>
             </CardContent>
@@ -171,7 +171,7 @@ export default function WhatsappInstances() {
 
         {/* Instances Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredInstances.map((instance: WhatsappInstance) => (
+          {filteredInstances.map((instance) => (
             <Card key={instance.id} className="transition-all duration-200 hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
