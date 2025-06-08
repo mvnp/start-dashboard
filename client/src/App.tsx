@@ -14,6 +14,7 @@ import PaymentGateways from "@/pages/PaymentGateways";
 import Collaborators from "@/pages/Collaborators";
 import WhatsappInstances from "@/pages/WhatsappInstances";
 import CustomerPlans from "@/pages/CustomerPlans";
+import PriceTables from "@/pages/PriceTables";
 
 import MockDataGenerator from "@/pages/MockDataGenerator";
 import NotFound from "@/pages/not-found";
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/collaborators" component={Collaborators} />
           <Route path="/whatsapp-instances" component={WhatsappInstances} />
           <Route path="/customer-plans" component={CustomerPlans} />
+          <Route path="/price-tables" component={PriceTables} />
 
           <Route path="/mock-data" component={MockDataGenerator} />
         </>
