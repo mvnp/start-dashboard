@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import type { User, PaymentGateway } from "@shared/schema";
-import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema } from "@shared/schema";
+import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema, insertWhatsappInstanceSchema, updateWhatsappInstanceSchema, insertPriceTableSchema, updatePriceTableSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -457,6 +457,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating QR code:", error);
       res.status(500).json({ message: "Failed to generate QR code" });
+    }
+  });
+
+  // Price Table routes - Super admin only for CRUD, public access for display
+  app.get("/api/price-tables", async (req, res) => {
+    try {
+      const priceTables = await storage.getAllPriceTables();
+      res.json(priceTables);
+    } catch (error) {
+      console.error("Error fetching price tables:", error);
+      res.status(500).json({ message: "Failed to fetch price tables" });
+    }
+  });
+
+  app.get("/api/price-tables/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const priceTable = await storage.getPriceTable(id);
+      if (!priceTable) {
+        return res.status(404).json({ message: "Price table not found" });
+      }
+      res.json(priceTable);
+    } catch (error) {
+      console.error("Error fetching price table:", error);
+      res.status(500).json({ message: "Failed to fetch price table" });
+    }
+  });
+
+  // Super admin only routes
+  const requireSuperAdmin = async (req: any, res: any, next: any) => {
+    const userId = req.headers['x-user-id'] || '1'; // Default to Admin for demo
+    const user = await storage.getUser(parseInt(userId));
+    
+    if (!user || user.role !== 'super-admin') {
+      return res.status(403).json({ message: "Access denied. Super admin role required." });
+    }
+    
+    req.userId = user.id;
+    next();
+  };
+
+  app.post("/api/price-tables", requireSuperAdmin, async (req, res) => {
+    try {
+      const validatedData = insertPriceTableSchema.parse(req.body);
+      const priceTable = await storage.createPriceTable(validatedData);
+      res.status(201).json(priceTable);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating price table:", error);
+      res.status(500).json({ message: "Failed to create price table" });
+    }
+  });
+
+  app.put("/api/price-tables/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = updatePriceTableSchema.parse(req.body);
+      
+      const priceTable = await storage.updatePriceTable(id, validatedData);
+      if (!priceTable) {
+        return res.status(404).json({ message: "Price table not found" });
+      }
+      
+      res.json(priceTable);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating price table:", error);
+      res.status(500).json({ message: "Failed to update price table" });
+    }
+  });
+
+  app.delete("/api/price-tables/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deletePriceTable(id);
+      if (!success) {
+        return res.status(404).json({ message: "Price table not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting price table:", error);
+      res.status(500).json({ message: "Failed to delete price table" });
     }
   });
 
