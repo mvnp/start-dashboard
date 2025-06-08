@@ -607,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer Plans routes
   app.get("/api/customer-plans", requireAuth, async (req, res) => {
     try {
-      const userId = req.userId;
+      const userId = req.userId!;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check access permissions
-      const userId = req.userId;
+      const userId = req.userId!;
       const user = await storage.getUser(userId);
       
       if (user?.role !== 'super-admin' && 
