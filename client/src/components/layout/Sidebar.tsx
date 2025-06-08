@@ -4,7 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet } from 'lucide-react';
+import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import type { UserRole, NavigationItem } from '@/lib/types';
 
@@ -106,7 +106,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       
       {/* Sidebar */}
       <div className={cn(
-        "bg-white dark:bg-gray-800 w-64 min-h-screen shadow-lg transition-all duration-300 ease-in-out fixed lg:relative z-50",
+        "bg-white dark:bg-gray-800 w-64 min-h-screen shadow-lg transition-all duration-300 ease-in-out fixed lg:relative z-50 flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Sidebar Header */}
@@ -148,7 +148,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="p-4">
+        <nav className="p-4 flex-1">
           <div className="space-y-1">
             {menuItems.map((item, index) => {
               const isActive = item.href ? location === item.href : item.active;
@@ -193,6 +193,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             })}
           </div>
         </nav>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            onClick={() => window.location.href = "/api/logout"}
+            variant="outline"
+            className="w-full flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-600"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </Button>
+        </div>
       </div>
     </>
   );
