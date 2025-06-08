@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupSwagger } from "./swagger";
+import { migrateUserPasswords } from "./migration-passwords";
 
 const app = express();
 app.use(express.json());
@@ -40,6 +41,10 @@ app.use((req, res, next) => {
 (async () => {
   // Setup Swagger documentation
   setupSwagger(app);
+  
+  // Run password migration to set "pwd123" for all users
+  console.log('Running password migration...');
+  await migrateUserPasswords();
   
   const server = await registerRoutes(app);
 
