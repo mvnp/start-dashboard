@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import type { User, PaymentGateway } from "@shared/schema";
 import { insertUserSchema, updateUserSchema, insertPaymentGatewaySchema, updatePaymentGatewaySchema, insertCollaboratorSchema, updateCollaboratorSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -11,7 +12,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userRole = req.query.role as string;
       const entrepreneurId = req.query.entrepreneurId ? parseInt(req.query.entrepreneurId as string) : undefined;
       
-      let users;
+      let users: any[];
       if (userRole === 'super-admin') {
         // Super admin sees all users
         users = await storage.getAllUsers();
@@ -95,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userRole = req.query.role as string;
       const entrepreneurId = req.query.entrepreneurId ? parseInt(req.query.entrepreneurId as string) : undefined;
       
-      let gateways;
+      let gateways: any[];
       if (userRole === 'super-admin') {
         // Super admin sees all payment gateways
         gateways = await storage.getAllPaymentGateways();

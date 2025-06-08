@@ -12,7 +12,8 @@ const mockUser: User = {
   id: '1',
   name: 'John Doe',
   email: 'john.doe@example.com',
-  role: 'super-admin'
+  role: 'super-admin',
+  avatar: ''
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
