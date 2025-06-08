@@ -68,7 +68,7 @@ export default function Home() {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1">
         <TopBar onMenuClick={() => setSidebarOpen(true)} />
         
         <div className="p-6">

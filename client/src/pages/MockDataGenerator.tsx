@@ -120,13 +120,15 @@ export default function MockDataGenerator() {
   };
 
   return (
-    <>
-      <TopBar onMenuClick={() => setSidebarOpen(true)} />
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
+      <div className="flex-1 flex flex-col lg:ml-0">
+        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        
+        <main className="flex-1 p-6">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Mock Data Generator
@@ -310,8 +312,9 @@ export default function MockDataGenerator() {
               </div>
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </main>
       </div>
-    </>
+    </div>
   );
 }
