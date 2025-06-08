@@ -13,6 +13,7 @@ import { format } from "date-fns";
 export function CustomerPlansSection() {
   const [selectedPlan, setSelectedPlan] = useState<CustomerPlanWithDetails | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showAllPlans, setShowAllPlans] = useState(false);
   const { toast } = useToast();
 
   const { data: customerPlans = [], isLoading } = useQuery<CustomerPlanWithDetails[]>({
@@ -85,7 +86,7 @@ export function CustomerPlansSection() {
   const totalRevenue = customerPlans
     .filter(plan => plan.payStatus === 'paid')
     .reduce((sum, plan) => sum + parseFloat(plan.amount || '0'), 0);
-  const recentPlans = customerPlans.slice(0, 5);
+  const displayedPlans = showAllPlans ? customerPlans : customerPlans.slice(0, 5);
 
   if (isLoading) {
     return (
@@ -181,7 +182,7 @@ export function CustomerPlansSection() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentPlans.map((plan) => (
+              {displayedPlans.map((plan) => (
                 <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -232,8 +233,12 @@ export function CustomerPlansSection() {
               
               {customerPlans.length > 5 && (
                 <div className="text-center pt-4">
-                  <Button variant="outline" size="sm">
-                    View All Customer Plans
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAllPlans(!showAllPlans)}
+                  >
+                    {showAllPlans ? 'Show Recent Only' : `View All ${customerPlans.length} Plans`}
                   </Button>
                 </div>
               )}

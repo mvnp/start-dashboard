@@ -14,7 +14,6 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'Users', label: 'User Management', href: '/users' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'MessageSquare', label: 'WhatsApp Instances', href: '/whatsapp-instances' },
-    { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
 
     { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },
@@ -29,7 +28,6 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'Users', label: 'Collaborators', href: '/collaborators' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'MessageSquare', label: 'WhatsApp Instances', href: '/whatsapp-instances' },
-    { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'DollarSign', label: 'Revenue' },
     { icon: 'FileIcon', label: 'Projects' },
