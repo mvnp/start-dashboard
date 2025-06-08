@@ -1,4 +1,4 @@
-import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails } from "@shared/schema";
+import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, supportTickets, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails, type SupportTicket, type InsertSupportTicket, type UpdateSupportTicket, type SupportTicketWithAssignee } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -47,6 +47,13 @@ export interface IStorage {
   createCustomerPlan(plan: InsertCustomerPlan): Promise<CustomerPlan>;
   updateCustomerPlan(id: number, plan: UpdateCustomerPlan): Promise<CustomerPlan | undefined>;
   deleteCustomerPlan(id: number): Promise<boolean>;
+
+  // Support Ticket operations
+  getSupportTicket(id: number): Promise<SupportTicket | undefined>;
+  getAllSupportTickets(): Promise<SupportTicketWithAssignee[]>;
+  createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket>;
+  updateSupportTicket(id: number, ticket: UpdateSupportTicket): Promise<SupportTicket | undefined>;
+  deleteSupportTicket(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -322,6 +329,76 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCustomerPlan(id: number): Promise<boolean> {
     const result = await db.delete(customerPlans).where(eq(customerPlans.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Support Ticket operations
+  async getSupportTicket(id: number): Promise<SupportTicket | undefined> {
+    const [ticket] = await db.select().from(supportTickets).where(eq(supportTickets.id, id));
+    return ticket || undefined;
+  }
+
+  async getAllSupportTickets(): Promise<SupportTicketWithAssignee[]> {
+    const tickets = await db
+      .select({
+        id: supportTickets.id,
+        ticketId: supportTickets.ticketId,
+        name: supportTickets.name,
+        email: supportTickets.email,
+        phone: supportTickets.phone,
+        subject: supportTickets.subject,
+        category: supportTickets.category,
+        priority: supportTickets.priority,
+        message: supportTickets.message,
+        status: supportTickets.status,
+        assignedTo: supportTickets.assignedTo,
+        resolution: supportTickets.resolution,
+        createdAt: supportTickets.createdAt,
+        updatedAt: supportTickets.updatedAt,
+        resolvedAt: supportTickets.resolvedAt,
+        assignee: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+        },
+      })
+      .from(supportTickets)
+      .leftJoin(users, eq(supportTickets.assignedTo, users.id))
+      .orderBy(supportTickets.createdAt);
+
+    return tickets.map(ticket => ({
+      ...ticket,
+      assignee: ticket.assignee.id ? ticket.assignee : null,
+    }));
+  }
+
+  async createSupportTicket(insertTicket: InsertSupportTicket): Promise<SupportTicket> {
+    const ticketId = `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const [ticket] = await db
+      .insert(supportTickets)
+      .values({
+        ...insertTicket,
+        ticketId,
+      })
+      .returning();
+    return ticket;
+  }
+
+  async updateSupportTicket(id: number, updateTicket: UpdateSupportTicket): Promise<SupportTicket | undefined> {
+    const [ticket] = await db
+      .update(supportTickets)
+      .set({
+        ...updateTicket,
+        updatedAt: new Date(),
+      })
+      .where(eq(supportTickets.id, id))
+      .returning();
+    return ticket || undefined;
+  }
+
+  async deleteSupportTicket(id: number): Promise<boolean> {
+    const result = await db.delete(supportTickets).where(eq(supportTickets.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

@@ -677,34 +677,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Support tickets endpoint
   app.post("/api/support-tickets", async (req, res) => {
     try {
-      const ticketData = req.body;
+      const validatedData = insertSupportTicketSchema.parse(req.body);
+      const ticket = await storage.createSupportTicket(validatedData);
       
-      // Generate a unique ticket ID
-      const ticketId = `TICKET-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // In a real application, you would save this to the database
-      // For now, we'll just log it and return success
-      console.log("Support ticket submitted:", {
-        id: ticketId,
-        ...ticketData,
-        submittedAt: new Date().toISOString()
-      });
-      
-      // Simulate email notification (in real app, you'd send actual emails)
-      console.log(`Email notification sent for ticket ${ticketId}`);
+      console.log(`Support ticket created: ${ticket.ticketId}`);
       
       res.status(201).json({
         success: true,
-        ticketId,
+        ticketId: ticket.ticketId,
         message: "Support ticket submitted successfully",
-        estimatedResponse: "24 hours"
+        estimatedResponse: "24 hours",
+        ticket
       });
     } catch (error) {
-      console.error("Error submitting support ticket:", error);
+      console.error("Error creating support ticket:", error);
       res.status(500).json({ 
         success: false,
         message: "Failed to submit support ticket" 
       });
+    }
+  });
+
+  app.get("/api/support-tickets", async (req, res) => {
+    try {
+      const tickets = await storage.getAllSupportTickets();
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error fetching support tickets:", error);
+      res.status(500).json({ message: "Failed to fetch support tickets" });
     }
   });
 

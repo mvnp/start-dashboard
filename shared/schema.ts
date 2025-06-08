@@ -237,3 +237,47 @@ export type CustomerPlanWithDetails = CustomerPlan & {
   customer: Pick<User, 'id' | 'name' | 'email'>;
   priceTable: Pick<PriceTable, 'id' | 'title' | 'subtitle' | 'currentPrice3x' | 'currentPrice12x' | 'months'>;
 };
+
+// Support Tickets
+export const supportTickets = pgTable("support_tickets", {
+  id: serial("id").primaryKey(),
+  ticketId: varchar("ticket_id", { length: 50 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // technical, billing, feature, bug, general
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("open"), // open, in_progress, resolved, closed
+  assignedTo: integer("assigned_to").references(() => users.id),
+  resolution: text("resolution"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).pick({
+  name: true,
+  email: true,
+  phone: true,
+  subject: true,
+  category: true,
+  priority: true,
+  message: true,
+});
+
+export const updateSupportTicketSchema = createInsertSchema(supportTickets).pick({
+  status: true,
+  assignedTo: true,
+  resolution: true,
+  resolvedAt: true,
+}).partial();
+
+export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+export type UpdateSupportTicket = z.infer<typeof updateSupportTicketSchema>;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+
+export type SupportTicketWithAssignee = SupportTicket & {
+  assignee?: Pick<User, 'id' | 'name' | 'email'> | null;
+};
