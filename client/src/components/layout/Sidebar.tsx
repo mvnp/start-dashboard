@@ -17,7 +17,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
-    { icon: 'HeadphonesIcon', label: 'Support', href: '/support' },
+    { icon: 'Headphones', label: 'Support', href: '/support' },
 
     { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },
@@ -35,7 +35,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'CreditCard', label: 'Customer Plans', href: '/customer-plans' },
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
-    { icon: 'HeadphonesIcon', label: 'Support', href: '/support' },
+    { icon: 'Headphones', label: 'Support', href: '/support' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'DollarSign', label: 'Revenue' },
     { icon: 'FileIcon', label: 'Projects' },
