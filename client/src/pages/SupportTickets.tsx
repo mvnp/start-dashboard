@@ -13,6 +13,8 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, Clock, User, Mail, Phone, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { TopBar } from "@/components/layout/TopBar";
 import type { SupportTicketWithAssignee } from "@shared/schema";
 
 const responseFormSchema = z.object({
@@ -185,6 +187,7 @@ function TicketResponseDialog({ ticket, open, onClose }: TicketResponseDialogPro
 export default function SupportTickets() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicketWithAssignee | null>(null);
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: tickets = [], isLoading } = useQuery<SupportTicketWithAssignee[]>({
     queryKey: ["/api/support-tickets"],
@@ -200,193 +203,214 @@ export default function SupportTickets() {
     setSelectedTicket(null);
   };
 
-  if (isLoading) {
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="space-y-6">
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-muted rounded-lg" />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-muted rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Support Tickets</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage customer support requests and responses
-          </p>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {tickets.length} ticket{tickets.length !== 1 ? 's' : ''} total
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Open</p>
-                <p className="text-2xl font-bold">
-                  {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'open').length}
-                </p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">In Progress</p>
-                <p className="text-2xl font-bold">
-                  {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'in_progress').length}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Resolved</p>
-                <p className="text-2xl font-bold">
-                  {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'resolved').length}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Closed</p>
-                <p className="text-2xl font-bold">
-                  {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'closed').length}
-                </p>
-              </div>
-              <XCircle className="h-8 w-8 text-gray-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {tickets.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No support tickets</h3>
-            <p className="text-muted-foreground">
-              All support tickets will appear here when customers submit them.
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Support Tickets</h1>
+            <p className="text-muted-foreground mt-2">
+              Manage customer support requests and responses
             </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {tickets.map((ticket: SupportTicketWithAssignee) => {
-            const StatusIcon = statusIcons[ticket.status as keyof typeof statusIcons];
-            
-            return (
-              <Card key={ticket.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">
-                        #{ticket.ticketId}
-                      </CardTitle>
-                      <CardDescription className="font-medium">
-                        {ticket.subject}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={priorityColors[ticket.priority as keyof typeof priorityColors]}>
-                        {ticket.priority}
-                      </Badge>
-                      <Badge className={statusColors[ticket.status as keyof typeof statusColors]}>
-                        <StatusIcon className="h-3 w-3 mr-1" />
-                        {ticket.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      {ticket.name}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      {ticket.email}
-                    </div>
-                    {ticket.phone && (
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {tickets.length} ticket{tickets.length !== 1 ? 's' : ''} total
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Open</p>
+                  <p className="text-2xl font-bold">
+                    {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'open').length}
+                  </p>
+                </div>
+                <AlertCircle className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">In Progress</p>
+                  <p className="text-2xl font-bold">
+                    {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'in_progress').length}
+                  </p>
+                </div>
+                <Clock className="h-8 w-8 text-yellow-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Resolved</p>
+                  <p className="text-2xl font-bold">
+                    {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'resolved').length}
+                  </p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Closed</p>
+                  <p className="text-2xl font-bold">
+                    {tickets.filter((t: SupportTicketWithAssignee) => t.status === 'closed').length}
+                  </p>
+                </div>
+                <XCircle className="h-8 w-8 text-gray-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {tickets.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No support tickets</h3>
+              <p className="text-muted-foreground">
+                All support tickets will appear here when customers submit them.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {tickets.map((ticket: SupportTicketWithAssignee) => {
+              const StatusIcon = statusIcons[ticket.status as keyof typeof statusIcons];
+              
+              return (
+                <Card key={ticket.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="text-lg">
+                          #{ticket.ticketId}
+                        </CardTitle>
+                        <CardDescription className="font-medium">
+                          {ticket.subject}
+                        </CardDescription>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {ticket.phone}
+                        <Badge className={priorityColors[ticket.priority as keyof typeof priorityColors]}>
+                          {ticket.priority}
+                        </Badge>
+                        <Badge className={statusColors[ticket.status as keyof typeof statusColors]}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {ticket.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {ticket.name}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        {ticket.email}
+                      </div>
+                      {ticket.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          {ticket.phone}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        {format(new Date(ticket.createdAt!), "MMM dd, yyyy HH:mm")}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm line-clamp-2">{ticket.message}</p>
+                    
+                    {ticket.resolution && (
+                      <div className="bg-muted p-3 rounded-lg">
+                        <p className="text-sm font-medium mb-1">Response:</p>
+                        <p className="text-sm">{ticket.resolution}</p>
+                        {ticket.resolvedAt && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Resolved on {format(new Date(ticket.resolvedAt), "MMM dd, yyyy HH:mm")}
+                          </p>
+                        )}
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {format(new Date(ticket.createdAt!), "MMM dd, yyyy HH:mm")}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-muted-foreground">
+                        Category: {ticket.category} | 
+                        {ticket.assignee ? ` Assigned to: ${ticket.assignee.name}` : ' Unassigned'}
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleRespond(ticket)}
+                        className="ml-auto"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        {ticket.status === 'resolved' || ticket.status === 'closed' ? 'View' : 'Respond'}
+                      </Button>
                     </div>
-                  </div>
-                  
-                  <p className="text-sm line-clamp-2">{ticket.message}</p>
-                  
-                  {ticket.resolution && (
-                    <div className="bg-muted p-3 rounded-lg">
-                      <p className="text-sm font-medium mb-1">Response:</p>
-                      <p className="text-sm">{ticket.resolution}</p>
-                      {ticket.resolvedAt && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Resolved on {format(new Date(ticket.resolvedAt), "MMM dd, yyyy HH:mm")}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">
-                      Category: {ticket.category} | 
-                      {ticket.assignee ? ` Assigned to: ${ticket.assignee.name}` : ' Unassigned'}
-                    </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleRespond(ticket)}
-                      className="ml-auto"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      {ticket.status === 'resolved' || ticket.status === 'closed' ? 'View' : 'Respond'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
-      {selectedTicket && (
-        <TicketResponseDialog
-          ticket={selectedTicket}
-          open={responseDialogOpen}
-          onClose={handleCloseDialog}
-        />
-      )}
+        {selectedTicket && (
+          <TicketResponseDialog
+            ticket={selectedTicket}
+            open={responseDialogOpen}
+            onClose={handleCloseDialog}
+          />
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+      />
+      
+      <div className="flex-1 flex flex-col lg:ml-0">
+        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        
+        <main className="flex-1 p-6">
+          <div className="animate-in fade-in-50 duration-300">
+            {renderContent()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
