@@ -112,17 +112,21 @@ export function CustomerPlanDialog({ open, onClose, customerPlan }: CustomerPlan
       };
 
       if (customerPlan) {
-        return apiRequest(`/api/customer-plans/${customerPlan.id}`, {
+        const response = await fetch(`/api/customer-plans/${customerPlan.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
           headers: { "Content-Type": "application/json" },
         });
+        if (!response.ok) throw new Error('Failed to update customer plan');
+        return response.json();
       } else {
-        return apiRequest("/api/customer-plans", {
+        const response = await fetch("/api/customer-plans", {
           method: "POST",
           body: JSON.stringify(payload),
           headers: { "Content-Type": "application/json" },
         });
+        if (!response.ok) throw new Error('Failed to create customer plan');
+        return response.json();
       }
     },
     onSuccess: () => {
