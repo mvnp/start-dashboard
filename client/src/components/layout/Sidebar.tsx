@@ -18,6 +18,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'DollarSign', label: 'Price Tables', href: '/price-tables' },
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
     { icon: 'Headphones', label: 'Support', href: '/support' },
+    { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
 
     { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },

@@ -708,6 +708,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/support-tickets/:id", async (req, res) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedTicket = await storage.updateSupportTicket(ticketId, updateData);
+      
+      if (!updatedTicket) {
+        return res.status(404).json({ message: "Support ticket not found" });
+      }
+
+      res.json(updatedTicket);
+    } catch (error) {
+      console.error("Error updating support ticket:", error);
+      res.status(500).json({ message: "Failed to update support ticket" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
