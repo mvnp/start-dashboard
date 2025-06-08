@@ -38,7 +38,12 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(entrepreneurId?: number): Promise<User[]> {
+    if (entrepreneurId) {
+      // Entrepreneur sees only their users (collaborators and customers)
+      return await db.select().from(users).where(eq(users.entrepreneurId, entrepreneurId));
+    }
+    // Super admin sees all users
     return await db.select().from(users);
   }
 
@@ -70,11 +75,16 @@ export class DatabaseStorage implements IStorage {
     return gateway || undefined;
   }
 
-  async getAllPaymentGateways(): Promise<PaymentGateway[]> {
+  async getAllPaymentGateways(entrepreneurId?: number): Promise<PaymentGateway[]> {
+    if (entrepreneurId) {
+      // Entrepreneur sees only their payment gateways
+      return await db.select().from(paymentGateways).where(eq(paymentGateways.entrepreneurId, entrepreneurId));
+    }
+    // Super admin sees all payment gateways
     return await db.select().from(paymentGateways);
   }
 
-  async createPaymentGateway(gateway: InsertPaymentGateway & { createdBy: number }): Promise<PaymentGateway> {
+  async createPaymentGateway(gateway: InsertPaymentGateway & { createdBy: number; entrepreneurId: number }): Promise<PaymentGateway> {
     const [createdGateway] = await db
       .insert(paymentGateways)
       .values(gateway)

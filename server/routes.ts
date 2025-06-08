@@ -8,7 +8,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Users CRUD routes
   app.get("/api/users", async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
+      const userRole = req.query.role as string;
+      const entrepreneurId = req.query.entrepreneurId ? parseInt(req.query.entrepreneurId as string) : undefined;
+      
+      let users;
+      if (userRole === 'super-admin') {
+        // Super admin sees all users
+        users = await storage.getAllUsers();
+      } else if (userRole === 'entrepreneur' && entrepreneurId) {
+        // Entrepreneur sees their own users (collaborators and customers)
+        users = await storage.getAllUsers(entrepreneurId);
+      } else {
+        users = [];
+      }
+      
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -79,7 +92,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment Gateways CRUD routes
   app.get("/api/payment-gateways", async (req, res) => {
     try {
-      const gateways = await storage.getAllPaymentGateways();
+      const userRole = req.query.role as string;
+      const entrepreneurId = req.query.entrepreneurId ? parseInt(req.query.entrepreneurId as string) : undefined;
+      
+      let gateways;
+      if (userRole === 'super-admin') {
+        // Super admin sees all payment gateways
+        gateways = await storage.getAllPaymentGateways();
+      } else if ((userRole === 'entrepreneur' || userRole === 'collaborator') && entrepreneurId) {
+        // Entrepreneur and collaborators see their entrepreneur's gateways
+        gateways = await storage.getAllPaymentGateways(entrepreneurId);
+      } else {
+        gateways = [];
+      }
+      
       res.json(gateways);
     } catch (error) {
       console.error("Error fetching payment gateways:", error);
