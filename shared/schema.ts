@@ -186,7 +186,6 @@ export type PriceTable = typeof priceTables.$inferSelect;
 export const customerPlans = pgTable("customer_plans", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").references(() => users.id).notNull(),
-  entrepreneurId: integer("entrepreneur_id").references(() => users.id).notNull(),
   priceTableId: integer("price_table_id").references(() => priceTables.id).notNull(),
   planType: varchar("plan_type", { length: 10 }).notNull(), // '3x' or '12x'
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
@@ -203,7 +202,6 @@ export const customerPlans = pgTable("customer_plans", {
 
 export const insertCustomerPlanSchema = createInsertSchema(customerPlans).pick({
   customerId: true,
-  entrepreneurId: true,
   priceTableId: true,
   planType: true,
   amount: true,
@@ -218,7 +216,6 @@ export const insertCustomerPlanSchema = createInsertSchema(customerPlans).pick({
 
 export const updateCustomerPlanSchema = createInsertSchema(customerPlans).pick({
   customerId: true,
-  entrepreneurId: true,
   priceTableId: true,
   planType: true,
   amount: true,
@@ -238,6 +235,5 @@ export type CustomerPlan = typeof customerPlans.$inferSelect;
 // Customer Plan with joined data type
 export type CustomerPlanWithDetails = CustomerPlan & {
   customer: Pick<User, 'id' | 'name' | 'email'>;
-  entrepreneur: Pick<User, 'id' | 'name' | 'email'>;
   priceTable: Pick<PriceTable, 'id' | 'title' | 'subtitle' | 'currentPrice3x' | 'currentPrice12x' | 'months'>;
 };

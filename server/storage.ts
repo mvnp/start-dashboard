@@ -42,9 +42,8 @@ export interface IStorage {
 
   // Customer Plan operations
   getCustomerPlan(id: number): Promise<CustomerPlan | undefined>;
-  getAllCustomerPlans(entrepreneurId?: number): Promise<CustomerPlanWithDetails[]>;
+  getAllCustomerPlans(): Promise<CustomerPlanWithDetails[]>;
   getCustomerPlansByCustomer(customerId: number): Promise<CustomerPlanWithDetails[]>;
-  getCustomerPlansByEntrepreneur(entrepreneurId: number): Promise<CustomerPlanWithDetails[]>;
   createCustomerPlan(plan: InsertCustomerPlan): Promise<CustomerPlan>;
   updateCustomerPlan(id: number, plan: UpdateCustomerPlan): Promise<CustomerPlan | undefined>;
   deleteCustomerPlan(id: number): Promise<boolean>;
@@ -238,15 +237,8 @@ export class DatabaseStorage implements IStorage {
     return plan || undefined;
   }
 
-  async getAllCustomerPlans(entrepreneurId?: number): Promise<CustomerPlanWithDetails[]> {
-    // Get all customer plans first
-    let baseQuery = db.select().from(customerPlans);
-    
-    if (entrepreneurId) {
-      baseQuery = baseQuery.where(eq(customerPlans.entrepreneurId, entrepreneurId));
-    }
-
-    const plans = await baseQuery.orderBy(customerPlans.createdAt);
+  async getAllCustomerPlans(): Promise<CustomerPlanWithDetails[]> {
+    const plans = await db.select().from(customerPlans).orderBy(customerPlans.createdAt);
     
     // Fetch related data for each plan
     const plansWithDetails: CustomerPlanWithDetails[] = [];
@@ -257,12 +249,6 @@ export class DatabaseStorage implements IStorage {
         name: users.name,
         email: users.email,
       }).from(users).where(eq(users.id, plan.customerId));
-
-      const [entrepreneur] = await db.select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-      }).from(users).where(eq(users.id, plan.entrepreneurId));
 
       const [priceTable] = await db.select({
         id: priceTables.id,
@@ -276,7 +262,6 @@ export class DatabaseStorage implements IStorage {
       plansWithDetails.push({
         ...plan,
         customer: customer || { id: 0, name: '', email: '' },
-        entrepreneur: entrepreneur || { id: 0, name: '', email: '' },
         priceTable: priceTable || { id: 0, title: '', subtitle: '', currentPrice3x: '', currentPrice12x: '', months: 0 }
       });
     }
@@ -299,12 +284,6 @@ export class DatabaseStorage implements IStorage {
         email: users.email,
       }).from(users).where(eq(users.id, plan.customerId));
 
-      const [entrepreneur] = await db.select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-      }).from(users).where(eq(users.id, plan.entrepreneurId));
-
       const [priceTable] = await db.select({
         id: priceTables.id,
         title: priceTables.title,
@@ -317,16 +296,11 @@ export class DatabaseStorage implements IStorage {
       plansWithDetails.push({
         ...plan,
         customer: customer || { id: 0, name: '', email: '' },
-        entrepreneur: entrepreneur || { id: 0, name: '', email: '' },
         priceTable: priceTable || { id: 0, title: '', subtitle: '', currentPrice3x: '', currentPrice12x: '', months: 0 }
       });
     }
 
     return plansWithDetails;
-  }
-
-  async getCustomerPlansByEntrepreneur(entrepreneurId: number): Promise<CustomerPlanWithDetails[]> {
-    return this.getAllCustomerPlans(entrepreneurId);
   }
 
   async createCustomerPlan(insertPlan: InsertCustomerPlan): Promise<CustomerPlan> {
