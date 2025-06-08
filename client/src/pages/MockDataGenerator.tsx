@@ -190,7 +190,7 @@ export default function MockDataGenerator() {
                     <Textarea
                       value={generatedData.apiKey}
                       readOnly
-                      className="text-xs font-mono"
+                      className="text-xs font-mono text-gray-900 dark:text-gray-100"
                       rows={2}
                     />
                     <Button
@@ -214,7 +214,7 @@ export default function MockDataGenerator() {
                     <Textarea
                       value={generatedData.token}
                       readOnly
-                      className="text-xs font-mono"
+                      className="text-xs font-mono text-gray-900 dark:text-gray-100"
                       rows={3}
                     />
                     <Button
@@ -238,7 +238,7 @@ export default function MockDataGenerator() {
                     <Input
                       value={generatedData.email}
                       readOnly
-                      className="font-mono"
+                      className="font-mono text-gray-900 dark:text-gray-100"
                     />
                     <Button
                       variant="outline"
@@ -261,7 +261,7 @@ export default function MockDataGenerator() {
                     <Textarea
                       value={generatedData.bcryptHash}
                       readOnly
-                      className="text-xs font-mono"
+                      className="text-xs font-mono text-gray-900 dark:text-gray-100"
                       rows={2}
                     />
                     <Button
