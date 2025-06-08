@@ -1,6 +1,7 @@
 import { users, paymentGateways, collaborators, whatsappInstances, priceTables, customerPlans, supportTickets, accounting, refreshTokens, type User, type InsertUser, type UpdateUser, type PaymentGateway, type InsertPaymentGateway, type UpdatePaymentGateway, type Collaborator, type InsertCollaborator, type UpdateCollaborator, type WhatsappInstance, type InsertWhatsappInstance, type UpdateWhatsappInstance, type PriceTable, type InsertPriceTable, type UpdatePriceTable, type CustomerPlan, type InsertCustomerPlan, type UpdateCustomerPlan, type CustomerPlanWithDetails, type SupportTicket, type InsertSupportTicket, type UpdateSupportTicket, type SupportTicketWithAssignee, type Accounting, type InsertAccounting, type UpdateAccounting, type RefreshToken, type InsertRefreshToken } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, lt } from "drizzle-orm";
+import { hashPassword } from "./auth";
 
 export interface IStorage {
   // User operations
@@ -91,17 +92,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Hash the password before storing
+    const hashedPassword = await hashPassword(insertUser.password);
+    
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values({ ...insertUser, password: hashedPassword })
       .returning();
     return user;
   }
 
   async updateUser(id: number, updateUser: UpdateUser): Promise<User | undefined> {
+    const updateData = { ...updateUser, updatedAt: new Date() };
+    
+    // Hash password if it's being updated
+    if (updateUser.password) {
+      updateData.password = await hashPassword(updateUser.password);
+    }
+    
     const [user] = await db
       .update(users)
-      .set({ ...updateUser, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(users.id, id))
       .returning();
     return user || undefined;

@@ -2,6 +2,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m'; // Short-lived access token
@@ -17,6 +18,12 @@ function getRefreshTokenExpiry(): Date {
   const now = new Date();
   const expiryDays = parseInt(REFRESH_TOKEN_EXPIRES_IN.replace('d', '')) || 7;
   return new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000);
+}
+
+// Helper function to hash passwords
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 10;
+  return await bcrypt.hash(password, saltRounds);
 }
 
 // Extend Request interface to include user
@@ -83,16 +90,15 @@ export async function login(req: Request, res: Response) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // For demo purposes, we'll use a simple check
-    // In production, you should hash passwords and store them securely
     const user = await storage.getUserByEmail(email);
     
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Simple password check (in production, use bcrypt)
-    if (password !== 'password123') {
+    // Compare password with bcrypt hash
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
