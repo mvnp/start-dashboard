@@ -39,13 +39,14 @@ const options = {
           properties: {
             id: { type: 'integer', example: 1 },
             name: { type: 'string', example: 'John Doe' },
-            email: { type: 'string', example: 'john@example.com' },
+            email: { type: 'string', format: 'email', example: 'john@example.com' },
             role: { 
               type: 'string', 
               enum: ['super-admin', 'entrepreneur', 'collaborator', 'customer'],
               example: 'entrepreneur'
             },
-            entrepreneurId: { type: 'integer', nullable: true, example: 1 },
+            avatar: { type: 'string', nullable: true, example: 'https://example.com/avatar.jpg' },
+            entrepreneurId: { type: 'integer', nullable: true, example: 2 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
