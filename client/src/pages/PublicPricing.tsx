@@ -1,313 +1,227 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ExternalLink, Star, Zap, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Plus, Edit, Trash2, Globe, Check, X } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import type { PriceTable } from "@shared/schema";
 
 export default function PublicPricing() {
-  const [selectedTable, setSelectedTable] = useState<PriceTable | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [is12MonthPlan, setIs12MonthPlan] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
+  
   const { data: priceTables = [], isLoading } = useQuery<PriceTable[]>({
     queryKey: ["/api/price-tables"],
   });
 
-  const togglePublicMutation = useMutation({
-    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const response = await fetch(`/api/price-tables/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ isActive: !isActive }),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update public status');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/price-tables"] });
-      toast({
-        title: "Success",
-        description: "Public pricing status updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update public status",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/price-tables/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete price table');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/price-tables"] });
-      toast({
-        title: "Success",
-        description: "Price table deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete price table",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleTogglePublic = (table: PriceTable) => {
-    togglePublicMutation.mutate({ id: table.id, isActive: table.isActive ?? false });
-  };
-
-  const handleEdit = (table: PriceTable) => {
-    setSelectedTable(table);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (table: PriceTable) => {
-    if (window.confirm(`Are you sure you want to delete the price table "${table.title}"?`)) {
-      deleteMutation.mutate(table.id);
-    }
-  };
-
-  const publicTables = priceTables.filter(table => table.isActive);
-  const privateTables = priceTables.filter(table => !table.isActive);
+  const activePriceTables = priceTables
+    .filter((table: PriceTable) => table.isActive)
+    .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Public Pricing</h1>
-              <p className="text-muted-foreground">Manage public-facing pricing displays</p>
-            </div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Choose Your Plan</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <div className="animate-pulse space-y-4">
-                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-96 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
             ))}
           </div>
         </div>
       );
     }
 
+    if (activePriceTables.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <Star className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            No pricing plans available
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            Pricing plans are currently being updated. Please check back soon.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Public Pricing</h1>
-            <p className="text-muted-foreground">
-              Manage public-facing pricing displays ({publicTables.length} public, {privateTables.length} private)
-            </p>
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="flex justify-center items-center gap-2 mb-2">
+            <Zap className="h-6 w-6 text-blue-600" />
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Choose Your Plan</h2>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Price Table
-          </Button>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Select the perfect plan that fits your needs. Upgrade or downgrade at any time.
+          </p>
+          
+          {/* Plan Duration Toggle */}
+          <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <span className={`text-sm font-medium ${!is12MonthPlan ? 'text-blue-600' : 'text-gray-500'}`}>
+              3-Month Plan
+            </span>
+            <Switch
+              checked={is12MonthPlan}
+              onCheckedChange={setIs12MonthPlan}
+              className="data-[state=checked]:bg-blue-600"
+            />
+            <span className={`text-sm font-medium ${is12MonthPlan ? 'text-blue-600' : 'text-gray-500'}`}>
+              12-Month Plan
+            </span>
+            {is12MonthPlan && (
+              <Badge variant="secondary" className="ml-2">
+                Best Value
+              </Badge>
+            )}
+          </div>
         </div>
 
-        {/* Public Pricing Tables */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold">Public Pricing Plans</h2>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
-              {publicTables.length} Active
-            </Badge>
-          </div>
-          
-          {publicTables.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Globe className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Public Pricing Plans</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Make some price tables public to display them on your website
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {publicTables.map((table) => (
-                <Card key={table.id} className="border-green-200 bg-green-50/50 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CardTitle className="text-lg">{table.title}</CardTitle>
-                        <Badge variant="default" className="bg-green-500">Public</Badge>
-                        <Badge variant="secondary">{table.months}m</Badge>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleTogglePublic(table)}>
-                            <X className="h-4 w-4 mr-2" />
-                            Make Private
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(table)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(table)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+        {/* Pricing Plans Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {activePriceTables.map((priceTable: PriceTable, index) => {
+            const isPopular = index === 1; // Middle plan is popular
+            
+            return (
+              <Card 
+                key={priceTable.id} 
+                className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
+                  isPopular ? 'ring-2 ring-blue-500 scale-105' : 'hover:scale-105'
+                }`}
+              >
+                {isPopular && (
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-2 text-sm font-medium">
+                    <Star className="inline w-4 h-4 mr-1" />
+                    Most Popular
+                  </div>
+                )}
+
+                {/* Header Image */}
+                {priceTable.image1 && (
+                  <div className={`aspect-video w-full overflow-hidden ${isPopular ? 'mt-10' : ''}`}>
+                    <img 
+                      src={priceTable.image1} 
+                      alt={priceTable.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                
+                <CardHeader className={`text-center ${isPopular && !priceTable.image1 ? 'pt-12' : 'pt-6'}`}>
+                  <div className="space-y-2">
+                    <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {priceTable.title}
+                    </CardTitle>
+                    {priceTable.subtitle && (
+                      <p className="text-gray-600 dark:text-gray-300">
+                        {priceTable.subtitle}
+                      </p>
+                    )}
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">
+                      Duration: {priceTable.months} months
                     </div>
-                    <CardDescription>{table.subtitle}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  {/* Features */}
+                  {priceTable.advantages && priceTable.advantages.length > 0 && (
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">3x Payment</span>
-                        <span className="font-semibold text-lg">${table.currentPrice3x}</span>
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-green-500" />
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          What's included:
+                        </h4>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">12x Payment</span>
-                        <span className="font-semibold text-lg">${table.currentPrice12x}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Duration</span>
-                        <span className="font-semibold">{table.months} months</span>
-                      </div>
+                      <ul className="space-y-2">
+                        {priceTable.advantages.map((advantage, index) => (
+                          <li key={index} className="flex items-start text-gray-600 dark:text-gray-300">
+                            <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm">{advantage}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Pricing */}
+                  <div className="text-center space-y-4">
+                    <div className="space-y-2">
+                      {(() => {
+                        const currentPrice = is12MonthPlan ? priceTable.currentPrice12x : priceTable.currentPrice3x;
+                        const oldPrice = is12MonthPlan ? priceTable.oldPrice12x : priceTable.oldPrice3x;
+                        const hasDiscount = oldPrice && parseFloat(oldPrice) > parseFloat(currentPrice);
+                        
+                        return (
+                          <>
+                            <div className="flex items-center justify-center gap-2">
+                              {hasDiscount && (
+                                <span className="text-xl text-gray-500 line-through">
+                                  ${oldPrice}
+                                </span>
+                              )}
+                              <span className={`text-4xl font-bold ${isPopular ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
+                                ${currentPrice}
+                              </span>
+                            </div>
+                            {hasDiscount && (
+                              <Badge variant="destructive" className="text-xs">
+                                Save ${(parseFloat(oldPrice!) - parseFloat(currentPrice)).toFixed(2)}
+                              </Badge>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
 
-                    {table.advantages && table.advantages.length > 0 && (
-                      <div className="pt-3 border-t">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Key Features</p>
-                        <div className="space-y-1">
-                          {table.advantages.slice(0, 3).map((advantage, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <Check className="h-3 w-3 text-green-500" />
-                              <p className="text-xs text-muted-foreground">{advantage}</p>
-                            </div>
-                          ))}
-                          {table.advantages.length > 3 && (
-                            <p className="text-xs text-muted-foreground ml-5">
-                              +{table.advantages.length - 3} more features
-                            </p>
-                          )}
-                        </div>
+                    {/* Preview Image */}
+                    {priceTable.image2 && (
+                      <div className="aspect-video w-full overflow-hidden rounded-lg border">
+                        <img 
+                          src={priceTable.image2} 
+                          alt={`${priceTable.title} preview`}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+
+                    {/* CTA Button */}
+                    {priceTable.buyLink && (
+                      <Button 
+                        className={`w-full ${isPopular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                        size="lg"
+                        onClick={() => window.open(priceTable.buyLink, '_blank')}
+                      >
+                        Get Started
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
-        {/* Private Pricing Tables */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold">Private Price Tables</h2>
-            <Badge variant="outline" className="bg-gray-100 text-gray-800">
-              {privateTables.length} Hidden
-            </Badge>
-          </div>
-          
-          {privateTables.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8">
-                <p className="text-muted-foreground text-center">
-                  All price tables are currently public
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {privateTables.map((table) => (
-                <Card key={table.id} className="border-gray-200 bg-gray-50/50 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CardTitle className="text-lg text-gray-600">{table.title}</CardTitle>
-                        <Badge variant="outline">Private</Badge>
-                        <Badge variant="secondary">{table.months}m</Badge>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleTogglePublic(table)}>
-                            <Check className="h-4 w-4 mr-2" />
-                            Make Public
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(table)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(table)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <CardDescription className="text-gray-500">{table.subtitle}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">3x Payment</span>
-                        <span className="font-semibold">${table.currentPrice3x}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">12x Payment</span>
-                        <span className="font-semibold">${table.currentPrice12x}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Duration</span>
-                        <span className="font-semibold">{table.months} months</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+        {/* Bottom CTA */}
+        <div className="text-center mt-12 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Need a custom solution?
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Contact our sales team for enterprise pricing and custom features.
+          </p>
+          <Button variant="outline" onClick={() => window.open('mailto:sales@company.com', '_blank')}>
+            Contact Sales
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </div>
     );
