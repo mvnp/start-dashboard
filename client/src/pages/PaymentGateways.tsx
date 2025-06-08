@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, Trash2, Search, CreditCard, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, CreditCard, Shield, CheckCircle, XCircle, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PaymentGatewayDialog } from '@/components/payment-gateways/PaymentGatewayDialog';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -208,6 +208,12 @@ export default function PaymentGateways() {
                     <Shield className="h-4 w-4 mr-2" />
                     <span className="truncate">Public Key: {gateway.publicKey.slice(0, 20)}...</span>
                   </div>
+                  {gateway.email && (
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <Mail className="h-4 w-4 mr-2" />
+                      <span className="truncate">{gateway.email}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex space-x-2">
