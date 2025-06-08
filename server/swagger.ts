@@ -20,6 +20,10 @@ const options = {
     },
     servers: [
       {
+        url: 'https://d8c5a78b-d0fb-4389-981b-eaf2b7a1f1cf-00-17pmyfjwtwpu.worf.replit.dev',
+        description: 'Production server'
+      },
+      {
         url: 'http://localhost:5000',
         description: 'Development server'
       }
