@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { PriceTable } from "@shared/schema";
 
 export default function Pricing() {
-  const { data: priceTables = [], isLoading } = useQuery({
+  const { data: priceTables = [], isLoading } = useQuery<PriceTable[]>({
     queryKey: ["/api/price-tables"],
   });
 

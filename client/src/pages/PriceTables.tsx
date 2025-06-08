@@ -15,16 +15,19 @@ export default function PriceTables() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const { data: priceTables = [], isLoading } = useQuery({
+  const { data: priceTables = [], isLoading } = useQuery<PriceTable[]>({
     queryKey: ["/api/price-tables"],
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/price-tables/${id}`, {
+      const response = await fetch(`/api/price-tables/${id}`, {
         method: "DELETE",
         headers: { 'x-user-id': '1' }, // Super admin
       });
+      if (!response.ok) {
+        throw new Error('Failed to delete price table');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/price-tables"] });

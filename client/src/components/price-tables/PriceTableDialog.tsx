@@ -59,8 +59,8 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
         image1: priceTable.image1 || "",
         image2: priceTable.image2 || "",
         buyLink: priceTable.buyLink,
-        isActive: priceTable.isActive,
-        displayOrder: priceTable.displayOrder,
+        isActive: priceTable.isActive ?? true,
+        displayOrder: priceTable.displayOrder || 0,
       });
       setAdvantages(priceTable.advantages || [""]);
     } else {
@@ -91,25 +91,23 @@ export function PriceTableDialog({ open, onClose, priceTable }: PriceTableDialog
         image2: data.image2 || null,
       };
 
-      if (priceTable) {
-        return await apiRequest(`/api/price-tables/${priceTable.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            'x-user-id': '1', // Super admin
-          },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        return await apiRequest("/api/price-tables", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            'x-user-id': '1', // Super admin
-          },
-          body: JSON.stringify(payload),
-        });
+      const url = priceTable ? `/api/price-tables/${priceTable.id}` : "/api/price-tables";
+      const method = priceTable ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          'x-user-id': '1', // Super admin
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${priceTable ? 'update' : 'create'} price table`);
       }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/price-tables"] });
