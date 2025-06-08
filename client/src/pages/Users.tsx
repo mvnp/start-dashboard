@@ -37,6 +37,8 @@ export default function Users() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  if (!user) return null;
+
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['/api/users', user.role, user.id],
   });

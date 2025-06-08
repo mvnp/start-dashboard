@@ -34,6 +34,8 @@ export default function PaymentGateways() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  if (!user) return null;
+
   const { data: gateways = [], isLoading } = useQuery<PaymentGateway[]>({
     queryKey: ['/api/payment-gateways', user.role, user.id],
   });

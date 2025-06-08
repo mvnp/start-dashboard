@@ -18,14 +18,20 @@ const mockUser: User = {
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>(mockUser);
+  const [user, setUser] = useState<User | null>(mockUser);
 
   const setUserRole = (role: UserRole) => {
-    setUser(prev => ({ ...prev, role }));
+    if (user) {
+      setUser(prev => prev ? { ...prev, role } : null);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUserRole }}>
+    <AuthContext.Provider value={{ user, setUserRole, logout }}>
       {children}
     </AuthContext.Provider>
   );

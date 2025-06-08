@@ -79,9 +79,11 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { user, setUserRole } = useAuth();
+  const { user, setUserRole, logout } = useAuth();
   const { theme } = useTheme();
   const [location] = useLocation();
+
+  if (!user) return null;
 
   const menuItems = navigationMenus[user.role];
 
@@ -198,9 +200,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             onClick={() => {
-              // Clear any local storage/session and redirect to landing
-              localStorage.clear();
-              sessionStorage.clear();
+              logout();
               window.location.href = "/";
             }}
             variant="outline"

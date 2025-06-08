@@ -24,6 +24,8 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
 
+  if (!user) return null;
+
   const handleLogout = () => {
     window.location.href = "/";
   };
