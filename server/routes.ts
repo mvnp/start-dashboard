@@ -977,6 +977,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Accounting CRUD routes
+  /**
+   * @swagger
+   * /api/accounting:
+   *   get:
+   *     tags: [Accounting]
+   *     summary: Get all accounting entries
+   *     description: Retrieve accounting entries for the authenticated entrepreneur. Super-admins can filter by entrepreneurId.
+   *     parameters:
+   *       - in: query
+   *         name: entrepreneurId
+   *         schema:
+   *           type: integer
+   *         description: Filter entries by entrepreneur ID (super-admin only)
+   *       - in: query
+   *         name: type
+   *         schema:
+   *           type: string
+   *           enum: [receives, expenses]
+   *         description: Filter by entry type
+   *       - in: query
+   *         name: category
+   *         schema:
+   *           type: string
+   *         description: Filter by category
+   *     responses:
+   *       200:
+   *         description: List of accounting entries
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Accounting'
+   *       401:
+   *         description: Authentication required
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/accounting", requireAuth, async (req, res) => {
     try {
       const entrepreneurId = parseInt(req.query.entrepreneurId as string) || req.userId;
@@ -988,6 +1026,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/accounting/{id}:
+   *   get:
+   *     tags: [Accounting]
+   *     summary: Get accounting entry by ID
+   *     description: Retrieve a specific accounting entry by its ID
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Accounting entry ID
+   *     responses:
+   *       200:
+   *         description: Accounting entry details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Accounting'
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: Accounting entry not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get("/api/accounting/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1002,6 +1068,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/accounting:
+   *   post:
+   *     tags: [Accounting]
+   *     summary: Create a new accounting entry
+   *     description: Create a new accounting entry (receive or expense) for the authenticated entrepreneur
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateAccounting'
+   *           examples:
+   *             expense:
+   *               summary: Expense entry
+   *               value:
+   *                 entrepreneurId: 2
+   *                 category: "Software Subscription"
+   *                 description: "Monthly payment for CRM software"
+   *                 date: "2024-01-15T10:30:00Z"
+   *                 type: "expenses"
+   *                 amount: "299.99"
+   *             revenue:
+   *               summary: Revenue entry
+   *               value:
+   *                 entrepreneurId: 2
+   *                 category: "Service Revenue"
+   *                 description: "Client project payment"
+   *                 date: "2024-01-15T14:30:00Z"
+   *                 type: "receives"
+   *                 amount: "1500.00"
+   *     responses:
+   *       201:
+   *         description: Accounting entry created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Accounting'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       401:
+   *         description: Authentication required
+   *       500:
+   *         description: Internal server error
+   */
   app.post("/api/accounting", requireAuth, async (req, res) => {
     try {
       const { date, ...otherData } = req.body;
@@ -1024,6 +1147,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/accounting/{id}:
+   *   patch:
+   *     tags: [Accounting]
+   *     summary: Update accounting entry
+   *     description: Update an existing accounting entry by ID
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Accounting entry ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               category:
+   *                 type: string
+   *                 example: "Office Supplies"
+   *               description:
+   *                 type: string
+   *                 example: "Updated description for office supplies purchase"
+   *               date:
+   *                 type: string
+   *                 format: date-time
+   *                 example: "2024-01-20T10:30:00Z"
+   *               type:
+   *                 type: string
+   *                 enum: [receives, expenses]
+   *                 example: "expenses"
+   *               amount:
+   *                 type: string
+   *                 pattern: '^\\d+\\.\\d{2}$'
+   *                 example: "149.99"
+   *           examples:
+   *             updateExpense:
+   *               summary: Update expense entry
+   *               value:
+   *                 category: "Office Supplies"
+   *                 description: "Updated office supplies purchase"
+   *                 amount: "149.99"
+   *             updateRevenue:
+   *               summary: Update revenue entry
+   *               value:
+   *                 category: "Consulting Revenue"
+   *                 description: "Updated consulting project payment"
+   *                 amount: "2500.00"
+   *     responses:
+   *       200:
+   *         description: Accounting entry updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Accounting'
+   *       400:
+   *         description: Invalid data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: Accounting entry not found
+   *       500:
+   *         description: Internal server error
+   */
   app.patch("/api/accounting/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1045,6 +1247,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/accounting/{id}:
+   *   delete:
+   *     tags: [Accounting]
+   *     summary: Delete accounting entry
+   *     description: Delete an accounting entry by ID. This action is permanent and cannot be undone.
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Accounting entry ID
+   *     responses:
+   *       204:
+   *         description: Accounting entry deleted successfully
+   *       401:
+   *         description: Authentication required
+   *       404:
+   *         description: Accounting entry not found
+   *       500:
+   *         description: Internal server error
+   */
   app.delete("/api/accounting/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
