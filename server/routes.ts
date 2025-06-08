@@ -546,6 +546,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Customer Plans routes
+  app.get("/api/customer-plans", requireAuth, async (req, res) => {
+    try {
+      const userId = req.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let customerPlans;
+      
+      // Super admin sees all plans, entrepreneurs see their plans, customers see their own plans
+      if (user.role === 'super-admin') {
+        customerPlans = await storage.getAllCustomerPlans();
+      } else if (user.role === 'entrepreneur') {
+        customerPlans = await storage.getCustomerPlansByEntrepreneur(user.id);
+      } else {
+        customerPlans = await storage.getCustomerPlansByCustomer(user.id);
+      }
+      
+      res.json(customerPlans);
+    } catch (error) {
+      console.error("Error fetching customer plans:", error);
+      res.status(500).json({ message: "Failed to fetch customer plans" });
+    }
+  });
+
+  app.get("/api/customer-plans/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const plan = await storage.getCustomerPlan(id);
+      
+      if (!plan) {
+        return res.status(404).json({ message: "Customer plan not found" });
+      }
+      
+      // Check access permissions
+      const userId = req.userId;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'super-admin' && 
+          plan.customerId !== userId && 
+          plan.entrepreneurId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching customer plan:", error);
+      res.status(500).json({ message: "Failed to fetch customer plan" });
+    }
+  });
+
+  app.post("/api/customer-plans", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertCustomerPlanSchema.parse(req.body);
+      const plan = await storage.createCustomerPlan(validatedData);
+      res.status(201).json(plan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating customer plan:", error);
+      res.status(500).json({ message: "Failed to create customer plan" });
+    }
+  });
+
+  app.put("/api/customer-plans/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = updateCustomerPlanSchema.parse(req.body);
+      
+      // Check if plan exists and user has permission
+      const existingPlan = await storage.getCustomerPlan(id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Customer plan not found" });
+      }
+      
+      const userId = req.userId;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'super-admin' && 
+          existingPlan.entrepreneurId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const plan = await storage.updateCustomerPlan(id, validatedData);
+      if (!plan) {
+        return res.status(404).json({ message: "Customer plan not found" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating customer plan:", error);
+      res.status(500).json({ message: "Failed to update customer plan" });
+    }
+  });
+
+  app.delete("/api/customer-plans/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if plan exists and user has permission
+      const existingPlan = await storage.getCustomerPlan(id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Customer plan not found" });
+      }
+      
+      const userId = req.userId;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'super-admin' && 
+          existingPlan.entrepreneurId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const success = await storage.deleteCustomerPlan(id);
+      if (!success) {
+        return res.status(404).json({ message: "Customer plan not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer plan:", error);
+      res.status(500).json({ message: "Failed to delete customer plan" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -13,6 +13,7 @@ import Users from "@/pages/Users";
 import PaymentGateways from "@/pages/PaymentGateways";
 import Collaborators from "@/pages/Collaborators";
 import WhatsappInstances from "@/pages/WhatsappInstances";
+import CustomerPlans from "@/pages/CustomerPlans";
 
 import MockDataGenerator from "@/pages/MockDataGenerator";
 import NotFound from "@/pages/not-found";
