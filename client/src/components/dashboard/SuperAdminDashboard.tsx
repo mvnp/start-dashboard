@@ -61,11 +61,36 @@ export function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Dashboard Navigation Tabs */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Super Admin Dashboard
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Manage your platform with comprehensive oversight and control
+        </p>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Dashboard Overview</TabsTrigger>
-          <TabsTrigger value="pricing-management">Price Tables</TabsTrigger>
-          <TabsTrigger value="public-pricing">Public Pricing</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+          <TabsTrigger 
+            value="overview" 
+            className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+          >
+            📊 Dashboard Overview
+          </TabsTrigger>
+          <TabsTrigger 
+            value="pricing-management" 
+            className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+          >
+            💰 Price Tables
+          </TabsTrigger>
+          <TabsTrigger 
+            value="public-pricing" 
+            className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+          >
+            👁️ Public Pricing
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">

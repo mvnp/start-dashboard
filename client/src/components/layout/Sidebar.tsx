@@ -10,7 +10,7 @@ import type { UserRole, NavigationItem } from '@/lib/types';
 
 const navigationMenus: Record<UserRole, NavigationItem[]> = {
   'super-admin': [
-    { icon: 'BarChart3', label: 'Dashboard', href: '/', active: true },
+    { icon: 'BarChart3', label: 'Dashboard', href: '/dashboard', active: true },
     { icon: 'Users', label: 'User Management', href: '/users' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'MessageSquare', label: 'WhatsApp Instances', href: '/whatsapp-instances' },
@@ -23,7 +23,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'FileText', label: 'Reports' }
   ],
   'entrepreneur': [
-    { icon: 'BarChart3', label: 'Dashboard', href: '/', active: true },
+    { icon: 'BarChart3', label: 'Dashboard', href: '/dashboard', active: true },
     { icon: 'Briefcase', label: 'My Business' },
     { icon: 'Users', label: 'Collaborators', href: '/collaborators' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
