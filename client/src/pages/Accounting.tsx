@@ -120,7 +120,7 @@ function AccountingDialog({ open, onClose, accounting }: AccountingDialogProps) 
   };
 
   // Reset form when dialog opens with existing data
-  React.useEffect(() => {
+  useEffect(() => {
     if (accounting && open) {
       form.reset({
         entrepreneurId: accounting.entrepreneurId,

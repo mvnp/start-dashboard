@@ -49,6 +49,7 @@ function Router() {
           <Route path="/public-pricing" component={PublicPricing} />
           <Route path="/support" component={Support} />
           <Route path="/support-tickets" component={SupportTickets} />
+          <Route path="/accounting" component={Accounting} />
 
           <Route path="/mock-data" component={MockDataGenerator} />
         </>

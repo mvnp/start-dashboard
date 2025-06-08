@@ -4,7 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut, Code2 } from 'lucide-react';
+import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut, Code2, Receipt, Globe, Ticket } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import type { UserRole, NavigationItem } from '@/lib/types';
 
@@ -19,6 +19,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
     { icon: 'Headphones', label: 'Support', href: '/support' },
     { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
+    { icon: 'Receipt', label: 'Accounting', href: '/accounting' },
 
     { icon: 'Code2', label: 'Mock Data Generator', href: '/mock-data' },
     { icon: 'Settings', label: 'System Settings' },
@@ -38,6 +39,7 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
     { icon: 'Globe', label: 'Public Pricing', href: '/public-pricing' },
     { icon: 'Headphones', label: 'Support', href: '/support' },
     { icon: 'Ticket', label: 'Support Tickets', href: '/support-tickets' },
+    { icon: 'Receipt', label: 'Accounting', href: '/accounting' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'DollarSign', label: 'Revenue' },
     { icon: 'FileIcon', label: 'Projects' },
@@ -86,7 +88,10 @@ const iconMap = {
   Headphones,
   Star,
   Wallet,
-  Code2
+  Code2,
+  Receipt,
+  Globe,
+  Ticket
 };
 
 interface SidebarProps {
