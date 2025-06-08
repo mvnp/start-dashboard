@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Dashboard from "@/pages/Dashboard";
 import Users from "@/pages/Users";
 import PaymentGateways from "@/pages/PaymentGateways";
+import Collaborators from "@/pages/Collaborators";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/users" component={Users} />
       <Route path="/payment-gateways" component={PaymentGateways} />
+      <Route path="/collaborators" component={Collaborators} />
       <Route component={NotFound} />
     </Switch>
   );

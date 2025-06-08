@@ -22,10 +22,10 @@ const navigationMenus: Record<UserRole, NavigationItem[]> = {
   'entrepreneur': [
     { icon: 'BarChart3', label: 'Dashboard', href: '/', active: true },
     { icon: 'Briefcase', label: 'My Business' },
+    { icon: 'Users', label: 'Collaborators', href: '/collaborators' },
     { icon: 'Wallet', label: 'Payment Gateways', href: '/payment-gateways' },
     { icon: 'TrendingUp', label: 'Analytics' },
     { icon: 'DollarSign', label: 'Revenue' },
-    { icon: 'Users', label: 'Team' },
     { icon: 'FileIcon', label: 'Projects' },
     { icon: 'Calendar', label: 'Schedule' }
   ],
