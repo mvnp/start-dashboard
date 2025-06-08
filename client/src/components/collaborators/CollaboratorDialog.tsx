@@ -1,16 +1,15 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
-import { insertCollaboratorSchema } from "@shared/schema";
+import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { apiRequest } from '@/lib/queryClient';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -18,22 +17,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import type { Collaborator } from "@shared/schema";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import type { Collaborator } from '@shared/schema';
 
-const collaboratorFormSchema = insertCollaboratorSchema.extend({
-  skills: z.string().optional(),
-  hireDate: z.date().optional(),
+const collaboratorFormSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+  department: z.string().min(1, 'Department is required'),
+  position: z.string().min(1, 'Position is required'),
 });
 
 type CollaboratorFormData = z.infer<typeof collaboratorFormSchema>;
@@ -47,19 +41,15 @@ interface CollaboratorDialogProps {
 export function CollaboratorDialog({ open, onClose, collaborator }: CollaboratorDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isEdit = !!collaborator;
+  const isEditing = !!collaborator;
 
   const form = useForm<CollaboratorFormData>({
     resolver: zodResolver(collaboratorFormSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      role: "",
-      department: "",
-      phone: "",
-      skills: "",
-      isActive: true,
-      hireDate: new Date(),
+      name: '',
+      email: '',
+      department: '',
+      position: '',
     },
   });
 
@@ -68,54 +58,40 @@ export function CollaboratorDialog({ open, onClose, collaborator }: Collaborator
       form.reset({
         name: collaborator.name,
         email: collaborator.email,
-        role: collaborator.role,
-        department: collaborator.department || "",
-        phone: collaborator.phone || "",
-        skills: collaborator.skills || "",
-        isActive: collaborator.isActive,
-        hireDate: collaborator.hireDate ? new Date(collaborator.hireDate) : new Date(),
+        department: collaborator.department,
+        position: collaborator.position,
       });
     } else {
       form.reset({
-        name: "",
-        email: "",
-        role: "",
-        department: "",
-        phone: "",
-        skills: "",
-        isActive: true,
-        hireDate: new Date(),
+        name: '',
+        email: '',
+        department: '',
+        position: '',
       });
     }
   }, [collaborator, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: CollaboratorFormData) => {
-      const url = isEdit ? `/api/collaborators/${collaborator.id}` : "/api/collaborators";
-      const method = isEdit ? "PUT" : "POST";
-      
-      // Convert skills array back to comma-separated string
-      const payload = {
-        ...data,
-        skills: data.skills || "",
-        hireDate: data.hireDate?.toISOString(),
-      };
-      
-      return apiRequest(url, method, payload);
+      if (isEditing) {
+        return await apiRequest(`/api/collaborators/${collaborator.id}`, 'PUT', data);
+      } else {
+        return await apiRequest('/api/collaborators', 'POST', data);
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/collaborators"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/collaborators'] });
       toast({
-        title: "Success",
-        description: `Collaborator ${isEdit ? "updated" : "created"} successfully`,
+        title: 'Success',
+        description: `Collaborator ${isEditing ? 'updated' : 'created'} successfully`,
       });
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: `Failed to ${isEdit ? "update" : "create"} collaborator`,
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || `Failed to ${isEditing ? 'update' : 'create'} collaborator`,
+        variant: 'destructive',
       });
     },
   });
@@ -126,83 +102,23 @@ export function CollaboratorDialog({ open, onClose, collaborator }: Collaborator
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "Edit Collaborator" : "Add New Collaborator"}
+            {isEditing ? 'Edit Collaborator' : 'Create New Collaborator'}
           </DialogTitle>
         </DialogHeader>
-
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address *</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Enter email address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Job Title/Role *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Software Developer, Designer" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Engineering, Marketing" value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="phone"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter phone number" value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
+                    <Input placeholder="Enter collaborator name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -211,14 +127,14 @@ export function CollaboratorDialog({ open, onClose, collaborator }: Collaborator
 
             <FormField
               control={form.control}
-              name="skills"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Skills</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Enter skills separated by commas (e.g., React, Node.js, Python, Design)"
-                      className="min-h-[80px]"
+                    <Input
+                      type="email"
+                      placeholder="Enter email address"
                       {...field}
                     />
                   </FormControl>
@@ -227,79 +143,57 @@ export function CollaboratorDialog({ open, onClose, collaborator }: Collaborator
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="hireDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Hire Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="department"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter department"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Active Status</FormLabel>
-                      <div className="text-sm text-muted-foreground">
-                        Is this collaborator currently active?
-                      </div>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="position"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Position</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter position"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className="flex justify-end space-x-4 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={mutation.isPending}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button
+                type="submit"
+                disabled={mutation.isPending}
+              >
                 {mutation.isPending
-                  ? `${isEdit ? "Updating" : "Creating"}...`
-                  : `${isEdit ? "Update" : "Create"} Collaborator`}
+                  ? `${isEditing ? 'Updating' : 'Creating'}...`
+                  : `${isEditing ? 'Update' : 'Create'} Collaborator`
+                }
               </Button>
             </div>
           </form>

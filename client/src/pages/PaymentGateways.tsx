@@ -38,6 +38,15 @@ export default function PaymentGateways() {
 
   const { data: gateways = [], isLoading } = useQuery<PaymentGateway[]>({
     queryKey: ['/api/payment-gateways', user.role, user.id],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        role: user.role,
+        ...(user.role !== 'super-admin' && { entrepreneurId: user.id.toString() })
+      });
+      const response = await fetch(`/api/payment-gateways?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch payment gateways');
+      return response.json();
+    },
   });
 
   const deleteGatewayMutation = useMutation({

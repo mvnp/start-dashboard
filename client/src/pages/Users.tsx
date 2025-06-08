@@ -41,6 +41,15 @@ export default function Users() {
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['/api/users', user.role, user.id],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        role: user.role,
+        ...(user.role !== 'super-admin' && { entrepreneurId: user.id.toString() })
+      });
+      const response = await fetch(`/api/users?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch users');
+      return response.json();
+    },
   });
 
   const deleteUserMutation = useMutation({
