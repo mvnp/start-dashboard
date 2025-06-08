@@ -4,7 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut, Code2, Table, Eye } from 'lucide-react';
+import { BarChart3, Users, Settings, Shield, Database, FileText, Briefcase, TrendingUp, DollarSign, Calendar, CheckSquare, MessageSquare, Clock, FileIcon, ShoppingCart, Heart, User, CreditCard, Headphones, Star, Menu, X, Wallet, LogOut, Code2 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import type { UserRole, NavigationItem } from '@/lib/types';
 
@@ -75,9 +75,7 @@ const iconMap = {
   Headphones,
   Star,
   Wallet,
-  Code2,
-  Table,
-  Eye
+  Code2
 };
 
 interface SidebarProps {
